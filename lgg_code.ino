@@ -18,7 +18,7 @@
 #include <Key.h>
 #include <Keypad.h>
 
-#define BTN_SQ '^'
+#define BTN_PWR '^'
 #define BTN_LOG 'L'
 #define BTN_LN 'N'
 #define BTN_EX 'e'
@@ -58,7 +58,7 @@ const char keysU[ROWS][COLS] = { // 윗 키패드
 const char keysD[ROWS][COLS] = { // 아래 키패드
     {BTN_LOG, BTN_LN, BTN_EX, BTN_CLR},
     {BTN_ARC, BTN_SIN, BTN_COS, BTN_TAN},
-    {BTN_SQ, BTN_SQRT, BTN_RECIPROCAL, BTN_EXCHANGEXY},
+    {BTN_PWR, BTN_SQRT, BTN_RECIPROCAL, BTN_EXCHANGEXY},
     {BTN_ENTER, BTN_CHS, BTN_EEX, BTN_CLX};
 };
 const double pi = 3.141592653589793238; // math.h 쓰면 주석처리할 것
