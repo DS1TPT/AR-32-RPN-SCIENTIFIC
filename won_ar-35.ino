@@ -30,9 +30,9 @@ double powInte(double x, double y) { //pow를 만들기 위해 필요할 것으�
 }
 
 double pow(double x, double y) { //power를 정수 범위에서 실행
-	double n = x;                //y에 실수 범위 지정시 오류
-	if (y == 0) {                //밑에 쓰인 함수들이 대부분 이 함수를 쓰므로 실수 계산에 있어 제약이 있음.
-		n = 1;                   //빠른 시일내로 실수가 가능하도록 변경할 필요가 있음.
+	double n = x;            //y에 실수 범위 지정시 오류
+	if (y == 0) {            //밑에 쓰인 함수들이 대부분 이 함수를 쓰므로 실수 계산에 있어 제약이 있음.
+		n = 1;           //빠른 시일내로 실수가 가능하도록 변경할 필요가 있음.
 	}
 	else if (y > 0) {
 		for (int i = 1; i < y; i++) {
@@ -48,8 +48,8 @@ double pow(double x, double y) { //power를 정수 범위에서 실행
 }
 
 double root(double x, int accuracy) { //정수 범위 내에서 바빌로니아 법을 이용해서 x^(1/2) 실행
-	double n = x / 2;                 //accuracy는 허용할 오차 ex: 0.0000000001
-	while (1) {           //powInte함수를 사용하는 함수임.
+	double n = x / 2;             //accuracy는 허용할 오차 ex: 0.0000000001
+	while (1) {                   //pow함수를 사용하는 함수임.
 		double memory = n;
 		if (pow(n, 2) == x) {
 			break;
@@ -67,7 +67,7 @@ double root(double x, int accuracy) { //정수 범위 내에서 바빌로니아 
 }
 
 double rootInte(double a, double b, int accuracy) { //root를 보다 일반화한 a^(1/b)를 구하는 함수
-	double n = a;                                   //이 역시 powInte를 쓰고 accuracy에 대한 내용 역시 root와 같다.
+	double n = a;                               //이 역시 pow를 쓰고 accuracy에 대한 내용 역시 root와 같다.
 	while (1) {
 		double memory = n;
 		n = n - ((pow(n, b) - a) / (b * pow(n, b - 1)));//뉴튼 랩튼법
@@ -84,11 +84,11 @@ double testF(double x) {
 }
 
 double dydxTestF(double x) {
-	return 2 * x - 4;
+	return 2 * x - 4;  //d/dx*{(x-2)^2}
 }
 
 double testNewton(double(*fx)(double x), double(*dydx)(double x), double startNumber ,int accuracy) {
-	double n = startNumber;                                  
+	double n = startNumber;  //뉴튼 랩튼법을 시작하는 x값 잘 잡으면 연산량이 조금 줄어듬                                
 	while (1) {
 		double memory = n;
 		n = n - fx(n)/dydx(n);//뉴튼 랩튼법
@@ -100,8 +100,8 @@ double testNewton(double(*fx)(double x), double(*dydx)(double x), double startNu
 	return n;
 }
 
-double gammaF(double z) { //항간의 차이가 0.000001가 날때까지 15000번 연산이 필요함. 
-	double result = 1/z;  //사실상 폐기
+double gammaF(double z) {     //항간의 차이가 0.000001가 날때까지 15000번 연산이 필요함. 
+	double result = 1/z;  //항간의 차이가 0.000001이어도 실제값과 차이는 0.2보다 큼... 사실상 폐기
 	double n = 1;         //facto에 x를 넣을때 여기에는 x+1를 넣어야함을 주의
 	int count = 0;
 	double memory = 0;
@@ -120,7 +120,7 @@ double gammaF(double z) { //항간의 차이가 0.000001가 날때까지 15000�
 	return result;
 }
 
-double facto(double x) {
+double facto(double x) { //!연산
 	//0보다 작은 수 혹은 실수가 들어올 경우 에러
 	if (x == 0) {
 		return 1;
@@ -134,7 +134,7 @@ double facto(double x) {
 	}
 }
 
-double sin(double x) {
+double sin(double x) { //sin(x)
 	double sum = 0;
 	double u = 0;
 	double i = 0;
@@ -152,7 +152,7 @@ double sin(double x) {
 	return sum;
 }
 
-double cos(double x) {
+double cos(double x) { //cos(x)
 	double sum = 0;
 	double u = 0;
 	double i = 0;
@@ -170,7 +170,7 @@ double cos(double x) {
 	return sum;
 }
 
-double tan(double x) {
+double tan(double x) { //tan(x)
 	return sin(x) / cos(x); //계산량이 부담된다면 개선 가능
 }
 
