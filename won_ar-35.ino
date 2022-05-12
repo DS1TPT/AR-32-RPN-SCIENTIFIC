@@ -1,4 +1,4 @@
-include <stdio.h>
+#include <stdio.h>
 #define ACCURACY 0.00000001
 /*ACCURACY를 10 ^ (-8)로 한 이유:
 window에서는 double이 소수점 6자리까지 정확도를 보장하기에
@@ -288,23 +288,12 @@ double ln(double a) {
 //뉴튼-랩튼으로는 답이 안 나옴
 //따로 메클로린 급수를 구해야 할듯
 double log(double a) {
-	double n = 0;
-	while (1) {
-		double memory = n;
-		double f = pow(10, n) - a;
-		double dF = n * pow(10, n - 1);
-		n = n - f / dF;//뉴튼 랩튼법
-		printf("test n= %f, memory= %f, f(x)= %f, dy/dx= %f\n", n, memory, f, dF); //테스트용 출력항
-		if (abs(memory - n) < ACCURACY) {
-			break;
-		}
-	}
-	return n;
+	return ln(a) / ln(10);
 }
 
 //소수점 6자리 이하로 내려가는 숫자의 입력 대해 필터링을 할 필요가 있어보임
 
 void main() {
-	printf("log= %f, pow= %f"
-		, log(0.4), pow(3, -8));
+	printf("log= %f, pow= %f, sin= %f, cos= %f, arccos= %f, arctan= %f"
+		, log(0.4), pow(3, -8), sin(0.2), cos(0.1), arccos(0.1), arctan(0.2));
 }
