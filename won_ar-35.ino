@@ -1,6 +1,4 @@
-// 원종완이 쓴 코드는 여기에...
-// 테스트 중... 아직 쓸게 못됨.
-#include <stdio.h>
+include <stdio.h>
 #define ACCURACY 0.00000001
 /*ACCURACY를 10 ^ (-8)로 한 이유:
 window에서는 double이 소수점 6자리까지 정확도를 보장하기에
@@ -8,6 +6,8 @@ window에서는 double이 소수점 6자리까지 정확도를 보장하기에
 아두이노 환경에서 보장하는 소수점 자리 수가 바뀐다면 바꿀 필요가 있다.*/
 
 //x의 절댓값을 내보내는 함수
+const double pi = 3.141592653589793238;
+
 double abs(double x) { 
 	if (x > 0) {
 		return x;
@@ -38,7 +38,7 @@ double numberingDouble(double target) {
 }
 
 /* x^y 값을 내보내는 함수
-x는 실수 범위 y는 정수 범위*/
+x는 0보다 크거나 같은 실수 범위 y는 정수 범위*/
 double powInte(double x, double y) { //pow를 만들기 위해 필요할 것으로 예상되어 미리 복제해둠.
 	double n = x;                    
 	if (y == 0) {                    
@@ -58,7 +58,7 @@ double powInte(double x, double y) { //pow를 만들기 위해 필요할 것으�
 }
 
 /*a ^ (1 / b)를 출력하는 함수
-a는 실수 범위, b는 정수 범위*/
+a는 0보다 크거나 같은 실수 범위, b는 정수 범위*/
 double rootInte(double a, double b) {
 	double n = 1;
 	while (1) {
@@ -73,18 +73,18 @@ double rootInte(double a, double b) {
 }
 
 /*x^y를 출력하는 함수
-x, y 모두 실수 범위*/
+x는 0보다 크거나 같은 실수 범위, y는 실수 범위*/
 double pow(double x, double y) { //power를 정수 범위에서 실행
 	double yD = 1000000;
 	double yU = y * yD;
 	//printf("yU: %f, yD: %f\n", yU, yD);
-	double root = rootInte(x, yD, ACCURACY);
+	double root = rootInte(x, yD);
 	double result = powInte(root, yU);
 	return result;
 }
 
 //x^(1/2)를 출력하는 함수
-//x는 실수 범위
+//x는 0보다 크거나 같은 실수 범위
 //바빌로니아법 이용
 double root(double x) { 
 	double n = x / 2;                 
@@ -107,7 +107,7 @@ double root(double x) {
 
 //함수 testNewton의 작동을 확인하기 위한 함수
 double testF(double x) {
-	return powInte(x-2, 2); //(x-2)^2
+	return pow(x-2, 2); //(x-2)^2
 }
 
 double dydxTestF(double x) {
@@ -138,7 +138,7 @@ double gammaF(double z) {
 	int count = 0;
 	double memory = 0;
 	while (1){
-		result = result * powInte(1 + (1 / n), z) / (1 + (z / n));
+		result = result * pow(1 + (1 / n), z) / (1 + (z / n));
 		//printf("*test result= %f, memory= %f, count= %d\n",result, memory, count);
 		n += 1;
 		if (abs(memory - result) < ACCURACY) {
@@ -200,7 +200,7 @@ double cos(double x) {
 		}
 		memory = sum;
 		u = powInte(-1, i) * powInte(x, 2 * i) / facto(2 * i);
-		printf("sum= %f30, u= %f i= %f\n", sum, u, i);
+		//printf("sum= %f, u= %f i= %f\n", sum, u, i);
 		sum = sum + u;
 		i++;
 	}
@@ -214,9 +214,97 @@ double tan(double x) {
 	return sin(x) / cos(x); 
 }
 
+double arcsin(double x) {
+	double i = 0;
+	double u = 0;
+	double sum = 0;
+	double memory = 1;
+	while (1){
+		if (abs(memory - sum) < ACCURACY) {
+			break;
+		}
+		memory = sum;
+		u = facto(2*i)*powInte(x, 2*i+1) / (powInte(4, i) * powInte(facto(i), 2) * (2 * i + 1));
+		//printf("sum= %f, u= %f i= %f\n", sum, u, i);
+		sum = sum + u;
+		i++;
+	}
+	return sum;
+}
+
+double arccos(double x) {
+	return pi / 2 - arcsin(x);
+}
+
+double arctan(double x) {
+	double i = 0;
+	double u = 0;
+	double sum = 0;
+	double memory = 1;
+	while (1) {
+		if (abs(memory - sum) < ACCURACY) {
+			break;
+		}
+		memory = sum;
+		u = powInte(-1, i)*powInte(x,2* i +1)/(2*i+1);
+		printf("sum= %f, u= %f i= %f\n", sum, u, i);
+		sum = sum + u;
+		i++;
+	}
+	return sum;
+}
+
+double exp(double x) {
+	double i = 0;
+	double u = 0;
+	double sum = 0;
+	double memory = 1;
+	while (1) {
+		if (abs(memory - sum) < ACCURACY) {
+			break;
+		}
+		memory = sum;
+		u = powInte(x, i) / facto(i);
+		//printf("sum= %f, u= %f i= %f\n", sum, u, i);
+		sum = sum + u;
+		i++;
+	}
+	return sum;
+}
+
+double ln(double a) {
+	double n = 1;
+	while (1) {
+		double memory = n;
+		n = n - (exp(n)-a) / exp(n);//뉴튼 랩튼법
+		printf("test n= %f, memory= %f, f(x)= %f, dy/dx= %f\n", n, memory, exp(n) - a, exp(n)); //테스트용 출력항
+		if (abs(memory - n) < ACCURACY) {
+			break;
+		}
+	}
+	return n;
+}
+
+//뉴튼-랩튼으로는 답이 안 나옴
+//따로 메클로린 급수를 구해야 할듯
+double log(double a) {
+	double n = 0;
+	while (1) {
+		double memory = n;
+		double f = pow(10, n) - a;
+		double dF = n * pow(10, n - 1);
+		n = n - f / dF;//뉴튼 랩튼법
+		printf("test n= %f, memory= %f, f(x)= %f, dy/dx= %f\n", n, memory, f, dF); //테스트용 출력항
+		if (abs(memory - n) < ACCURACY) {
+			break;
+		}
+	}
+	return n;
+}
+
 //소수점 6자리 이하로 내려가는 숫자의 입력 대해 필터링을 할 필요가 있어보임
 
 void main() {
-	printf("sin(2)= %f, rootInte= %f, pow= %f, numberingDouble= %f"
-		, sin(2), rootInte(1.24, 100000), pow(1.2, 1.243), numberingDouble(3123.245564));
+	printf("log= %f, pow= %f"
+		, log(0.4), pow(3, -8));
 }
