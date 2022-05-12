@@ -1,5 +1,3 @@
-// 아직 틀 다 안 짰음
-
 /* 구현할 때 요구사항 및 주의사항
 *  1. 0으로 나누기와 같은 건 명령어가 들어왔을 때 오류를 띄우고 막아야 함.
 *  -> 오류는 위 왼쪽에서 ERROR만 띄우는 걸로 충분함.
@@ -64,7 +62,7 @@ const char keysD[ROWS][COLS] = { // 아래 키패드
     {BTN_LOG, BTN_LN, BTN_EX, BTN_CLR},
     {BTN_ARC, BTN_SIN, BTN_COS, BTN_TAN},
     {BTN_PWR, BTN_SQRT, BTN_RECIPROCAL, BTN_EXCHANGEXY},
-    {BTN_ENTER, BTN_CHS, BTN_EEX, BTN_CLX};
+    {BTN_ENTER, BTN_CHS, BTN_EEX, BTN_CLX}
 };
 const double pi = 3.141592653589793238; // math.h 쓰면 주석처리할 것
 const byte rowPinsD[ROWS] = { 0, 1, 2, 3 }; // R1 ~ R4 차례대로 연결한 디지털 핀번호
@@ -78,7 +76,7 @@ const byte colPinsU[COLS] = { 12, 13, 14, 15 }; // C1 ~ C4 차례대로 연결�
 volatile double regX, regY, regZ, regT; // 레지스터 XYZT, 수시로 값이 바뀔 수 있어 최적화 제외
 bool isArc = false; // ARC 버튼이 눌렸는지를 저장하는 상태 변수
 char buffer[17] = { 0, }; // 입력 버퍼(문자열)
-char operator = 0; // 연산자를 저장하는 변수
+char op = 0; // 연산자를 저장하는 변수
 byte errCode = NO_ERR; // 오류 코드를 임시로 저장하는 변수
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2); // LCD. 작동이 되지 않으면 주소를 0x27로 해볼 것
@@ -87,7 +85,8 @@ Keypad kpdU = Keypad(makeKeymap(keysU), rowPinsU, colPinsU, ROWS, COLS);
 Keypad kpdD = Keypad(makeKeymap(keysD), rowPinsD, colPinsD, ROWS, COLS);
 
 void setup() {
-    lcd.begin(); //LCD 시작
+    lcd.init(); //LCD 시작
+    lcd.backlight();
     regX = 0.0;
     regY = 0.0;
     regZ = 0.0;
@@ -165,7 +164,7 @@ void loop() {
             break;
 
             case '/':
-            bufferToRegX();
+            bufferToRegX(true);
             if (regX == 0.0) goto loop_err;
             regX = regY / regX;
             rollDownReg();
@@ -253,14 +252,14 @@ void loop() {
     return;
 
     loop_err: // 루프 함수에서 생긴 오류 처리
-    if (regX == 0.0 && operator == '/') { // 0으로 나누기 오류
+    if (regX == 0.0 && op == '/') { // 0으로 나누기 오류
         errCode = ERR_DIVZERO;
     }
     printLCD(MODE_ERR);
 }
 
 void proc() { // 처리 함수
-    if (operator) { // 연산자 입력 받음
+    if (op) { // 연산자 입력 받음
         printLCD(MODE_BUSY); // 계산중이라고 띄워놓고 연산 시작
         // 연산을 처리하는 부분을 아래에 적기
     }
@@ -319,7 +318,7 @@ void printLCD(byte mode) {
         lcd.print(buffer);
     }
     // 상태 정보를 아랫줄에 표시
-    lcd.setCursor(0, 1) // 아랫줄 처음으로 커서 설정
+    lcd.setCursor(0, 1); // 아랫줄 처음으로 커서 설정
     if (regY != 0.0) { // Y 레지스터에 값이 있으면 Y 표시
         lcd.print('Y');
     }
@@ -354,19 +353,19 @@ void errWait() {
     delay(500); // 0.5초 기다림
     regX = 0.0; // X 레지스터의 값을 0으로 초기화
     memset(buffer, 0, sizeof(buffer)); // 입력을 모두 지움
-    operator = 0; // 연산자 지움
+    op = 0; // 연산자 지움
 }
 
 /* 기능 함수 구현 */
 void shiftBuffer(byte dir) { // 버퍼에서 문자를 한 방향으로 미는 함수, 순환 없음
     int len = sizeof(buffer); // 버퍼 크기 저장
     if (dir == RIGHT) {
-        for (i = len - 2; i >= 0; i--) {
+        for (int i = len - 2; i >= 0; i--) {
             buffer[i + 1] = buffer[i];
         }
     }
     else if (dir == LEFT) {
-        for (i = 0; i < len - 1; i++) {
+        for (int i = 0; i < len - 1; i++) {
             buffer[i] = buffer[i + 1];
         }
     }
@@ -386,7 +385,7 @@ void clearMem() { // 메모리 비우는 함수
     regZ = 0.0;
     regT = 0.0;
     isArc = false;
-    operator = 0;
+    op = 0;
 }
 
 char* szParse(char* sz, const char* delim) { // 문자열의 특정 부분의 주소를 반환하는 함수(parse)
@@ -394,7 +393,7 @@ char* szParse(char* sz, const char* delim) { // 문자열의 특정 부분의 �
     while (*sz) {
         pDelimCh = (char*)delim;
         while (*pDelimCh) {
-            if (*sz == *pDelimCh++) *sz = null;
+            if (*sz == *pDelimCh++) *sz = NULL;
         }
         if (!*sz) return ++sz;
         sz++;
