@@ -27,7 +27,7 @@
 #define BTN_LOG 2
 #define BTN_LN 3
 #define BTN_EX 4
-#define BTN_CLR 5
+#define BTN_ROLLDOWN 5
 #define BTN_SQRT 6
 #define BTN_SHIFT 7
 #define BTN_SIN 8
@@ -79,7 +79,7 @@ const char keysD[ROWS][COLS] = { // 윗 키패드
     {'0','.','p','/'}
 };
 const char keysU[ROWS][COLS] = { // 아래 키패드
-    {BTN_LOG, BTN_LN, BTN_EX, BTN_CLR},
+    {BTN_LOG, BTN_LN, BTN_EX, BTN_ROLLDOWN},
     {BTN_SHIFT, BTN_SIN, BTN_COS, BTN_TAN},
     {BTN_PWR, BTN_SQRT, BTN_RECIPROCAL, BTN_EXCHANGEXY},
     {BTN_ENTER, BTN_CHS, BTN_EEX, BTN_CLX}
@@ -92,23 +92,23 @@ const byte colPinsU[COLS] = { 10, 11, 12, 13 }; // C1 ~ C4 차례대로 연결�
 
 // 전역변수 목록
 volatile double regX, regY, regZ, regT; // 레지스터 XYZT, 수시로 값이 바뀔 수 있어 최적화 제외
-bool isShift = false; // Shift 상태변수
+volatile float64_t regX64, regY64, regZ64, regT64 // 64비트 레지스터 XYZT
 char buffer[17] = { 0, }; // 입력 버퍼(문자열)
-char op = 0; // 연산자를 저장하는 변수
-byte errCode = NO_ERR; // 오류 코드를 임시로 저장하는 변수
+char op = 0; // 연산자 저장
+byte errCode = NO_ERR; // 오류 코드 임시 저장
 byte angleMode = ANGLE_RAD;
-#ifdef _DEF_PRECISION_FLOAT32 
-bool is64b = false; // 64비트 부동소수점을 쓰는지 저장
-#else
-const bool is64b = true;
-#endif
-bool is bklight = true; // 백라이트 켜는지 끄는지 저장
+bool is64b = false; // 64비트 부동소수점을 쓰는지 지정
+bool isShift = false; // Shift 상태 변수
+bool isBkLight = true; // 백라이트 켜는지 끄는지 저장
+bool isBlockInput = false; // 입력을 막는지 지정
+bool isDecimal = false; // 소수점 있는지
+bool isEEX = false; // 지수입력 있는지
 
 // 키패드 라이브러리 설정 부분
 Keypad kpdU = Keypad(makeKeymap(keysU), rowPinsU, colPinsU, ROWS, COLS);
 Keypad kpdD = Keypad(makeKeymap(keysD), rowPinsD, colPinsD, ROWS, COLS);
 
-LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD. 작동이 되지 않으면 주소를 0x27로 해볼 것
+LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD. 작동이 되지 않으면 주소를 0x3F로 해볼 것
 
 
 // 프로그램 시작점
@@ -127,75 +127,156 @@ void loop() {
     if (keyD) { // 아래 키패드 처리
         switch (keyD) {
             case '1':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '1');
+            }
             break;
 
             case '2':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '2');
+            }
             break;
 
             case '3':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '3');
+            }
             break;
 
             case '4':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '4');
+            }
             break;
 
             case '5':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '5');
+            }
             break;
 
             case '6':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '6');
+            }
             break;
 
             case '7':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '7');
+            }
             break;
 
             case '8':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '8');
+            }
             break;
 
             case '9':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '9');
+            }
             break;
 
             case '0':
-
+            if (isShift) {
+              clearMem(true);
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '0');
+            }
             break;
 
             case '.':
+            if (isShift) {
 
+            }
+            else {
+              if (!isBlockInput) szAppend(buffer, '.');
+            }
             break;
 
             case 'p':
-            if (regX != 0.0) {
-                
+            if (isShift) {
+
+            }
+            else {
+
             }
             break;
 
             case '-':
-            regX = regY - regX;
-            rollDownReg();
+            if (isShift) {
+
+            }
+            else {
+            if (is64b) regX64 = fp64_add(regY64, regX64);
+            else regX = regY + regX;
+              rollDownReg(false);
+            }
             break;
 
             case '+':
-            regX = regY + regX;
-            rollDownReg();
+            if (is64b) regX64 = fp64_sub(regY64, regX64);
+            else regX = regY - regX;
+            rollDownReg(false);
             break;
 
             case 'x':
-            regX = regY * regX;
-            rollDownReg();
+            if (is64b) regX64 = fp64_mul(regY64, regX64);
+            else regX = regY * regX;
+            rollDownReg(false);
             break;
 
             case '/':
             bufferToRegX(true);
-            if (regX == 0.0) goto loop_err;
-            regX = regY / regX;
-            rollDownReg();
+            if (isShift) {
+              
+            }
+            else {
+              if (is64b)
+                if (regX64 == (float64_t)0.0) {
+                  errCode == ERR_DIVZERO
+                  goto loop_err;
+                }
+              else
+                if (regX == (float64_t)0.0) {
+                  errCode == ERR_DIVZERO
+                  goto loop_err;
+              }
+              if (is64b) regX64 = fp64_div(regY64, regX64);
+              else regX = regY / regX;
+            }
+            rollDownReg(false);
             break;
         }
         proc(); // 아래 키패드가 눌렸다면 처리 함수 호출
@@ -218,9 +299,9 @@ void loop() {
             clearMem();
             break;
 
-            case BTN_ARC:
-            if (!isArc) isArc = true;
-            else isArc = false;
+            case BTN_SHIFT:
+            if (!isShift) isShift = true;
+            else isShift = false;
             break;
 
             case BTN_SIN:
@@ -273,6 +354,7 @@ void loop() {
             case BTN_CLX:
             memset(buffer, 0, sizeof(buffer));
             regX = 0.0;
+            
             break;
         }
         proc(); // 윗 키패드가 눌렸다면 처리 함수 호출
@@ -280,9 +362,7 @@ void loop() {
     return;
 
     loop_err: // 루프 함수에서 생긴 오류 처리
-    if (regX == 0.0 && op == '/') { // 0으로 나누기 오류
-        errCode = ERR_DIVZERO;
-    }
+    // 따로 연산이 필요하면 코드 넣기
     printLCD(MODE_ERR);
 }
 
@@ -299,22 +379,54 @@ void proc() { // 처리 함수
     return;
 
     proc_err: // 처리 함수에서 생긴 오류 처리
-    if (regX >= 1.0e+100 || regX <= 1.0e-100) { // 범위 초과 오류
-        errCode = ERR_OOR;
+    if (is64b) {
+        if (regX64 >= 1.0e100 || regX64 <= 1.0e-100) {
+            errCode = ERR_OOR;
+        }
+    }
+    else {
+        if (regX >= 3.4e+38 || regX <= 3.4e-37) { // 범위 초과 오류
+            errCode = ERR_OOR;
+        }
     }
     // 다른 오류 처리 코드 넣기
 
     printLCD(MODE_ERR); // 오류 표시
 }
 
-void rollDownReg() { // 레지스터 하나씩 내리는 함수, Y->X는 구현 안함(의도됨)
+void rollDownReg(bool isRBTN) { // 계산중 레지스터 하나씩 내리는 함수
+    if (is64b) {
+        if (isRBTN) {
+          float64_t tmp= tx64;
+          regX64 = regY64;
+          regY64 = regZ64;
+          regZ64 = regT64;
+          regT64 = tx64;
+        }
+        else {
+          regY64 = regZ64;
+          regZ64 = regT64;
+          regT64 = 0;
+        }
+    }
+    else {
+      if (isRBTN) {
+          double tmp= tx;
+          regX = regY;
+          regY = regZ;
+          regZ = regT;
+          regT = tx;
+      }
+      else {
         regY = regZ;
         regZ = regT;
         regT = 0;
+      }
+    }
 }
 
 void printLCD(byte mode) {
-    char str[16] = { 0, };
+    char str[12] = { 0, };
     lcd.clear();
     lcd.setCursor(0, 0); // 윗줄 처음으로 커서 설정
     if (mode == MODE_ERR) { // 오류 표시
@@ -339,18 +451,23 @@ void printLCD(byte mode) {
         return;
     }
     if (mode == MODE_RES) { // 결과값을 표시하는 부분
-        dtostrf(regX, -16, 12, str);
-        lcd.print(str);
+        if (is64b) {
+          dtostrf(regX, -16, 12, str);
+          lcd.print(str);
+        }
+        else {
+          char *ptr = fp64_to_string(regX64, -16, 12);
+          lcd.print(ptr);
+        }
     }
     else if (mode == MODE_IN) { // 입력값을 표시하는 부분
         lcd.print(buffer);
     }
     // 상태 정보를 아랫줄에 표시
     lcd.setCursor(0, 1); // 아랫줄 처음으로 커서 설정
-    if (
     if (isShift) { // arc 눌렀으면 표시
         lcd.setCursor(4, 1);
-        lcd.print("arc");
+        lcd.print("SHIFT");
     }
     if (mode == MODE_RES) { // 결과값 표시면 RESULT라고 표시
         lcd.setCursor(11, 1);
@@ -370,6 +487,7 @@ void errWait() {
     }
     delay(500); // 0.5초 기다림
     regX = 0.0; // X 레지스터의 값을 0으로 초기화
+    regX64 = (float64_t)0.0;
     memset(buffer, 0, sizeof(buffer)); // 입력을 모두 지움
     op = 0; // 연산자 지움
 }
@@ -392,7 +510,8 @@ void shiftBuffer(byte dir) { // 버퍼에서 문자를 한 방향으로 미는 �
 
 void bufferToRegX(bool clrBuffer) { // 버퍼의 값을 레지스터 X로 복사.
     char* eptr;
-    regX = strtod(buffer, &eptr);
+    if (is64b) regX64 = fp64_strtod(buffer, &eptr);
+    else regX = strtod(buffer, &eptr);
     if (clrBuffer) memset(buffer, 0, sizeof(buffer)); // 인수가 참일 때만 버퍼 지움
 }
 
@@ -402,7 +521,15 @@ void clearMem() { // 메모리 비우는 함수
     regY = 0.0;
     regZ = 0.0;
     regT = 0.0;
-    isArc = false;
+    regX64 = (float64_t)0.0;
+    regY64 = (float64_t)0.0;
+    regZ64 = (float64_t)0.0;
+    regT64 = (float64_t)0.0;
+    isShift = false;
+    isBkLight = true;
+    isBlockInput = false;
+    isDecimal = false;
+    is64b = false;
     op = 0;
 }
 
@@ -419,12 +546,21 @@ char* szParse(char* sz, const char* delim) { // 문자열의 특정 부분의 �
     return NULL;
 }
 
-void szAppend(char *sz, const char* ch) { // 글자를 문자열에 덧붙이는 함수
+void szAppend(char *sz, const char ch) { // 글자를 문자열에 덧붙이는 함수
     char* ptr = sz;
     for (int i = 0; i < 11; i++) {
-      if (*ptr = 0) {
+      if (*ptr == 0 && i < 10) { // 10번 미만에서 널문자 있을 때
+        *ptr++ = ch;
+        if (ch == '.') isDecimal = true; // 소수점 들어오면 소수점 마커를 참으로 바꿈
+        if (!isDecimal) *ptr++ = '.'; // 소수점이 입력이 없으면 점을 마지막에 찍음
+        *ptr = 0;
+        return;
+      }
+      else if (*ptr == 0 && i == 10) { // 10번에서 널문자 있을 때는 점을 마지막에 찍지 않음
         *ptr++ = ch;
         *ptr = 0;
+        
+        return;
       }
       ptr++;
     }
