@@ -85,6 +85,7 @@ const byte colPinsU[COLS] = { 10, 11, 12, 13 }; // C1 ~ C4 차례대로 연결�
 
 // 전역변수 목록
 volatile float64_t regX, regY, regZ, regT; // 레지스터 XYZT, 수시로 값이 바뀔 수 있어 최적화 제외
+volatile float64_t stomem;
 char buffer[12] = { 0, }; // 입력 버퍼(문자열)
 char expBuf[4] = { 0, }; // 지수 입력 버퍼(문자열)
 char op = 0; // 연산자 저장
@@ -111,6 +112,7 @@ void setup() {
     regY = (float64_t)0.0;
     regZ = (float64_t)0.0;
     regT = (float64_t)0.0;
+    stomem = (float64_t)0.0;
 }
 
 void loop() {
@@ -535,6 +537,7 @@ void clearMem(bool reset) { // 메모리 비우는 함수
     isShift = false;
     if (reset) {
       isBkLight = true;
+      stomem = (float64_t)0.0;
     }
 }
 
