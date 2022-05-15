@@ -78,8 +78,8 @@ void main() {
 	char* test = malloc(sizeof(char)*3);
 
 	double testD = 0.0;
-  
-  printf("E의 뒤가 보고 싶은 건가 자네?\n어떤 E의 뒷태가 보고 싶은 거지?(적당한 소수 입력) : ");
+	
+	printf("E의 뒤가 보고 싶은 건가 자네?\n어떤 E의 뒷태가 보고 싶은 거지?(적당한 소수 입력) : ");
 
 	scanf_s("%Lf", &testD, sizeof(testD));
 	//readAfterE_(testD, test);
