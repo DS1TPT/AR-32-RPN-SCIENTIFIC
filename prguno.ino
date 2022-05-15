@@ -248,7 +248,7 @@ void loop() {
             }
             break;
 
-            case 'x': //Shift: 
+            case 'x': //Shift: x!
             bufferToRegX(true);
             if (isShift) {
 
@@ -473,7 +473,11 @@ void printLCD(byte mode) {
     lcd.setCursor(0, 1); // 아랫줄 처음으로 커서 설정
     if (isShift) { // arc 눌렀으면 표시
         lcd.setCursor(4, 1);
-        lcd.print("SHIFT");
+        lcd.print("SHFT");
+    }
+    if (stomem != (float64_t)0.0) {
+        lcd.setCursor(9, 1)
+        lcd.print('M');
     }
     if (mode == MODE_RES) { // 결과값 표시면 RESULT라고 표시
         lcd.setCursor(11, 1);
@@ -588,8 +592,18 @@ float64_t calc_facto(float64_t x) {
   }
   else {
     float64_t sum = (float64_t)1.0;
-    for (float64_t i = (float64_t)2.0; i <= x; i++) {
+    /*
+    for (float64_t i = (float64_t)2.0; i <= x; i++) { // while 문으로 바꿔야할 듯
       sum = fp64_mul(sum, i);
+    }
+    */
+    float64_t i = (float64_t)2.0;
+    while(1) {
+      if (fp64_compare(i, x) == (float64_t)1.0) break;
+      else {
+        sum = fp64_mul(sum, i);
+        i = fp64_add(i, (float64_t)1.0);
+      }
     }
     return sum;
   }
