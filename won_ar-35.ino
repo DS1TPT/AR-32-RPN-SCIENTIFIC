@@ -293,6 +293,32 @@ double log(double a) {
 
 //소수점 6자리 이하로 내려가는 숫자의 입력 대해 필터링을 할 필요가 있어보임
 
+double calc_lnBiggerThanTwo(double input) {
+
+}
+
+double calc_lnZeroToTwo(double input) {
+	double x = input - 1;
+	double i = 1.0;
+	double memory = 1.0;
+	double sum = 0.0;
+	while (abs(memory -sum) >= ACCURACY) {
+		double u;
+		if ((int)i % 2 == 1){
+			u = 1.0;
+		}
+		else{
+			u = -1.0;
+		}
+		double d = powInte(x, i) / i;
+		printf("memory= %.15Lf, sum= %.15Lf, u= %.15Lf, d= %.15Lf\n", memory, sum, u, d);
+		memory = sum;
+		sum = sum + u * d;
+		i++;
+	}
+	return sum;
+}
+
 void main() {
 	printf("log= %f, pow= %f, sin= %f, cos= %f, arccos= %f, arctan= %f"
 		, log(0.4), pow(3, -8), sin(0.2), cos(0.1), arccos(0.1), arctan(0.2));
