@@ -610,7 +610,7 @@ void rollDownReg(bool isRBTN) { // 레지스터 하나씩 내리는 함수
 }
 
 void rollUpReg() { // 레지스터 하나씩 올리는 함수
-    float64_t tmp = tt;
+    float64_t tt = regT;
     regT = regZ;
     regZ = regY;
     regY = regX;
@@ -671,7 +671,7 @@ void printLCD(byte mode) {
         lcd.print("SHFT");
     }
     if (fp64_ds(stomem) != 0.0) {
-        lcd.setCursor(9, 1)
+        lcd.setCursor(9, 1);
         lcd.print('M');
     }
     if (mode == MODE_RES) { // 결과값 표시면 RESULT라고 표시
