@@ -114,6 +114,7 @@ Copyright 2021, Lee Geon-goo, Won Jong-wan.
 // 기타 정의
 #define ANGLE_DEG 0
 #define ANGLE_RAD 1
+#define NULL 0
 
 // 상수 정의
 const float64_t ACCURACY = fp64_sd(0.00000000000001);
@@ -180,6 +181,8 @@ void loop() {
         switch (keyD) {
             case '1': //Shift: F -> C
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: 화씨 -> 섭씨
               //가이드
               //bufferToRegX(true);는 입력버퍼 값을 레지스터 X(변수 이름: regX)로 복사하고 버퍼를 지움
@@ -195,79 +198,95 @@ void loop() {
               //※※ 예시로 sin 함수 연산 부에서 어떻게 코드를 짰는지를 확인할 것.
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '1');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '1');
             }
             break;
 
             case '2': //Shift: C -> F
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: 섭씨 -> 화씨
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '2');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '2');
             }
             break;
 
             case '3': //Shift: rad -> deg
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: rad -> deg
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '3');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '3');
             }
             break;
 
             case '4': //Shift: lb -> kg
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: lb -> kg
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '4');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '4');
             }
             break;
 
             case '5': //Shift: kg -> lb
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: kg -> lb
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '5');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '5');
             }
             break;
 
             case '6': //Shift: gal(US) -> L
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: gal(US) -> L
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '6');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '6');
             }
             break;
 
             case '7': //Shift: mile -> km
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: mile -> km
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '7');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '7');
             }
             break;
 
             case '8': //Shift: km -> mile
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: km -> mile
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '8');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '8');
             }
             break;
 
             case '9': //Shift: in -> mm
             if (isShift) {
+              printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: in -> mm
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '9');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '9');
             }
             break;
 
@@ -276,7 +295,7 @@ void loop() {
               clearMem(true);
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '0');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '0');
             }
             break;
 
@@ -285,7 +304,7 @@ void loop() {
 
             }
             else {
-              if (!isBlockInput) szAppend(buffer, '.');
+              if (!isBlockInput && !isEEX) szAppend(buffer, '.');
             }
             break;
 
@@ -299,19 +318,20 @@ void loop() {
             break;
 
             case '-': //Shift: mm -> in
+            printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: mm -> in
             }
             else {
-              bufferToRegX(true);
               regX = fp64_add(regY, regX);
-              rollDownReg(false);
             }
             isOp = true;
             break;
 
             case '+': //Shift: deg to rad
-            bufferToRegX(true);
+            printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               regX = calc_degreeToRad(regX);
             }
@@ -324,11 +344,11 @@ void loop() {
 
             case 'x': //Shift: deg -> rad
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: deg to rad
             }
             else {
-              bufferToRegX(true);
               regX = fp64_mul(regY, regX);
               rollDownReg(false);
             }
@@ -336,13 +356,14 @@ void loop() {
             break;
 
             case '/': //Shift: x% of y
-            bufferToRegX(true);
+            printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               
             }
             else {
               if (fp64_to_int8(fp64_compare(regX, fp64_sd(0.0))) == 0) {
-                  errCode == ERR_DIVZERO
+                  errCode == ERR_DIVZERO;
                   goto loop_err;
               }
               regX = fp64_div(regY, regX);
@@ -356,8 +377,8 @@ void loop() {
     else if (keyU) { // 윗 키패드 처리
         switch (keyU) {
             case BTN_LOG: //Shift: log_x(y)
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //참고 구현부1. TODO: log_x(y)
               regX = calc_logXY(regX, regY);
@@ -371,8 +392,8 @@ void loop() {
             break;
 
             case BTN_LN: //Shift: log2
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: log2(x)
             }
@@ -388,8 +409,8 @@ void loop() {
               
             }
             else {
-              bufferToRegX(true);
               printLCD(MODE_BUSY);
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: e^x
               isOp = true;
             }
@@ -410,8 +431,8 @@ void loop() {
             break;
 
             case BTN_SIN: //Shift: asin
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: ARCSIN
             }
@@ -422,8 +443,8 @@ void loop() {
             break;
 
             case BTN_COS: //Shift: acos
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: ARCCOS
             }
@@ -434,8 +455,8 @@ void loop() {
             break;
 
             case BTN_TAN: //Shift: atan
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: ARCTAN
             }
@@ -446,8 +467,8 @@ void loop() {
             break;
 
             case BTN_PWR: //Shift: x^2
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: x의 제곱
             }
@@ -459,8 +480,8 @@ void loop() {
             break;
 
             case BTN_SQRT: //Shift: (x)th root of y
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: y의 x제곱근
               rollDownReg(false);
@@ -472,8 +493,8 @@ void loop() {
             break;
 
             case BTN_RECIPROCAL: //Shift: abs
-            bufferToRegX(true);
             printLCD(MODE_BUSY);
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: abs(x)
             }
@@ -485,7 +506,9 @@ void loop() {
 
             case BTN_EXCHANGEXY: //Shift: x!
             if (isShift) {
+              if (buffer[0] != 0) bufferToRegX(true);
               //TODO: x!
+              isOp == true;
             }
             else {
               
@@ -493,6 +516,17 @@ void loop() {
             break;
 
             case BTN_ENTER: //Shift: sto
+            if (buffer[0] != 0) bufferToRegX(true);
+            if (isShift) {
+
+            }
+            else {
+              
+            }
+            break;
+
+            case BTN_CHS: //Shift: rcl
+            if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               
             }
@@ -501,10 +535,9 @@ void loop() {
             }
             break;
 
-            case BTN_CHS: //Shift: rcl
-            bufferToRegX(false);
+            case BTN_EEX: //Shift: clear memory(for sto/rcl)
             if (isShift) {
-              
+              stomem = fp64_sd(0.0);
             }
             else {
               //(regX > (float64_t)0.0)
@@ -517,15 +550,7 @@ void loop() {
               else if (cmptmp == -1.0) {
                 shiftBuffer(LEFT);
               } 
-            }
-            break;
-
-            case BTN_EEX: //Shift: clear memory(for sto/rcl)
-            if (isShift) {
-              stomem = fp64_sd(0.0);
-            }
-            else {
-              
+              isEEX = true;
             }
             break;
 
@@ -549,7 +574,7 @@ void loop() {
 }
 
 void proc() { // 처리 함수
-    if (isOp) { // 연산자 입력 없음
+    if (!isOp) { // 연산자 입력 없음
         printLCD(MODE_IN); // 입력 출력
         return; // 함수 종료
     }
@@ -740,6 +765,13 @@ void szAppend(char *sz, const char ch) { // 글자를 문자열에 덧붙이는 
       }
       ptr++;
     }
+}
+
+void chkAndProcNoBufVal() {
+  if (buffer[0] == 0) {
+      buffer[0] = '0';
+      buffer[1] == NULL;
+  }
 }
 
 
