@@ -184,8 +184,14 @@ void loop() {
               printLCD(MODE_BUSY);
               if (buffer[0] != 0) bufferToRegX(true);
               //TODO: F -> C
-               regX = calc_fToC(regX); //END
-               
+               if(fp64_to_int8(compare(regX, fp64_sd(−459.67)) == 1){ //절대영도 보다 높은지 검사
+								regX = calc_cToF(regX);
+							}
+							else{
+								errCode == ERR_OOR;
+                  goto loop_err;
+							}//END
+									
               //가이드
               //bufferToRegX(true);는 입력버퍼 값을 레지스터 X(변수 이름: regX)로 복사하고 버퍼를 지움
               //rollDownReg(false);는 레지스터 T부터 하나씩 내림(Y->X는 하지 않음)
@@ -209,7 +215,13 @@ void loop() {
               printLCD(MODE_BUSY);
               if (buffer[0] != 0) bufferToRegX(true);
               //TODO: C -> F
-               regX = calc_cToF(regX); //END
+							if(fp64_to_int8(compare(regX, fp64_sd(-273.15)) == 1){ //절대영도 보다 높은지 검사
+								regX = calc_cToF(regX);
+							}
+							else{
+								errCode == ERR_OOR;
+                  goto loop_err;
+							}//END
             }
             else {
               if (!isBlockInput && !isEEX) szAppend(buffer, '2');
@@ -887,7 +899,8 @@ float64_t calc_exp(float64_t x) {
 float64_t calc_ln(float64_t input) {
 	float64_t index = fp64_sd(0.0);
 	float64_t x;
-	if (input >= fp64_sd(2.0)) { //2보다 큰지 확인 //수정 바람 1
+	//input >= 2
+	if (fp64_to_int8(compare(input, fp64_sd(2.0))) >= 0) { //2보다 큰지 확인 //수정 바람 1
 		x = fp64_div(fp64_sd(1.0) , fp64_sub(input, fp64_sd(1.0)));
 		index = fp64_sd(1.0);
 	}
@@ -897,9 +910,11 @@ float64_t calc_ln(float64_t input) {
 	float64_t i = fp64_sd(1.0);
 	float64_t memory = fp64_sd(1.0);
 	float64_t sum = fp64_sd(0.0);
-	while (abs(memory -sum) >= ACCURACY) { //수정 바람 2
+	//abs(memory -sum) >= ACCURACY
+	while (fp64_to_int8(compare(abs(memory -sum), ACCURACY)) >= 0 ) { //수정 바람 2
 		float64_t u;
-		if ((int)i % 2 == 1){ //수정 바람 3
+		//(int)i % 2 == 1
+		if (fp64_to_int8(fmod(i, fp64_sd(2.0))) == 1){ //수정 바람 3
 			u = fp64_sd(1.0);
 		}
 		else{
@@ -910,7 +925,8 @@ float64_t calc_ln(float64_t input) {
 		sum = fp64_add(sum, fp64_mul(u, d));
 		i = fp64_add(i, fp64_sd(1.0));
 	}
-	if (index == fp64_sd(1.0)) { //input이 2보다 컸으면 -를 붙여서 출력  //수정 바람 4
+	//index == 1.0
+	if (fp64_to_int8(compare(index, fp64_sd(1.0))) == 0) { //input이 2보다 컸으면 -를 붙여서 출력  //수정 바람 4
 		return fp64_mul(sum, fp64_sd(-1));
 	}
 	else {
