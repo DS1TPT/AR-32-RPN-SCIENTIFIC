@@ -881,22 +881,41 @@ float64_t calc_exp(float64_t x) {
   return sum;
 }
 /*
-*lnx를 구하는 함수
-*x는 0보다 큰 실수 범위
-*exp 계산이 여러 번 시행됨(exp를 이용해서 뉴턴 랩슨을 하기 때문)
-*시작하는 n값에 따라 연산량이 변화함
-*나중에 매클로린으로 바꿔놓겠음*/
-float64_t calc_ln(float64_t a) {
-  float64_t n = fp64_sd(1.0);
-  while (1) {
-    float64_t memory = n;
-    // n = n - (calc_exp(n) - a) / calc_exp(n);//뉴튼 랩튼법
-    n = fp64_sub(n, fp64_div(fp64_sub(calc_exp(n), a), calc_exp(n))); // 뉴턴 랩슨법
-    if (fp64_to_int8(fp64_compare(calc_abs(fp64_sub(memory, n)), ACCURACY)) == -1) {
-      break;
-    }
-  }
-  return n;
+*ln를 구하는 함수
+*input은 0보다 큰 실수 범위
+*테일러 급수 이용*/
+float64_t calc_ln(float64_t input) {
+	float64_t index = fp64_sd(0.0);
+	float64_t x;
+	if (input >= fp64_sd(2.0)) { //2보다 큰지 확인 //수정 바람 1
+		x = fp64_div(fp64_sd(1.0) , fp64_sub(input, fp64_sd(1.0)));
+		index = fp64_sd(1.0);
+	}
+	else{
+		x = fp64_sub(input, fp64_sd(1.0));
+	}
+	float64_t i = fp64_sd(1.0);
+	float64_t memory = fp64_sd(1.0);
+	float64_t sum = fp64_sd(0.0);
+	while (abs(memory -sum) >= ACCURACY) { //수정 바람 2
+		float64_t u;
+		if ((int)i % 2 == 1){ //수정 바람 3
+			u = fp64_sd(1.0);
+		}
+		else{
+			u = fp64_sd(-1.0);
+		}
+		float64_t d = fp64_div(powInte(x, i), i);
+		memory = sum;
+		sum = fp64_add(sum, fp64_mul(u, d));
+		i = fp64_add(i, fp64_sd(1.0));
+	}
+	if (index == fp64_sd(1.0)) { //input이 2보다 컸으면 -를 붙여서 출력  //수정 바람 4
+		return fp64_mul(sum, fp64_sd(-1));
+	}
+	else {
+		return sum;
+	}
 }
 /*
 *x^y를 출력하는 함수
