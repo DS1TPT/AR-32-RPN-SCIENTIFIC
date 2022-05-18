@@ -109,6 +109,50 @@ float64_t calc_exp(float64_t x, long int loop){
 	return sum;
 }
 
+double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 것으로 예상되어 미리 복제해둠.
+	double n = x;
+	int i = y;
+	if (y == 0) {
+		n = 1;
+	}
+	else if (y > 0) {
+		while (i != 1) {
+			n *= x;
+			printf("n= %f, i= %d\n", n, i);
+			i--;
+		}
+	}
+	else {
+		while (i != 1) {
+			n /= x;
+			printf("n= %f, i= %d\n", n, i);
+			i++;
+		}
+	}
+	return n;
+}
+
+float64_t calc_powInte(float64_t x, float64_t y) { 
+	float64_t n = x;
+	long int i = fp64_int32_to_float64(y);
+	if (fp64_compare(y, 0) != 0) {
+		n = fp64_sd(1,0);
+	}
+	else if (fp64_compare(y, 0) == 1) {
+		while (i != 1) {
+			n = fp64_mul(n, x);
+			i--;
+		}
+	}
+	else {
+		while (i != 1) {
+			n = fp64_div(n, x);
+			i++;
+		}
+	}
+	return n;
+}
+
 void main(){
 	printf("%.15Lf\n ", calc_sin(2, 100));
 }
