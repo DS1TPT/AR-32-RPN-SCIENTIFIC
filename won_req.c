@@ -63,10 +63,15 @@ float64_t calc_sin(float64_t x, int loop){
 			break;
 		}*/
 		memory = sum; 
-		u = fp64_mul(calc_powInte(fp64_sd(-1.0), i), calc_powInte(x, fp64_add(fp64_mul(fp64_sd(2.0), fp64_sd(i)), fp64_sd(1.0))));
-		d = calc_facto(fp64_add(fp64_mul(fp64_sd(2.0), i), fp64_sd(1.0)));
+		u = calc_powInte(fp64_sd(-1.0), i);
+		d = fp64_add(fp64_sd(i), fp64_sd(1.0));
+		d = fp64_mul(fp64_sd(2.0), d);
+		u = fp64_mul(u, calc_powInte(x, d));
+		d = fp64_add(i, fp64_sd(1.0));
+		d = fp64_mul(fp64_sd(2.0), d);
+		u = fp64_div(u, calc_facto(d));
 		//printf("sum= %f30, u= %f i= %d\n", sum, u, i);
-		sum = sum + u/d;
+		sum = fp64_add(sum, u);
 		i++;
 	}
 	return sum;
