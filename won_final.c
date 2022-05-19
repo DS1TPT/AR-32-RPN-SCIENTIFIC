@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 const double pi = 3.14159265359;
+const double e = 2.71828182846;
 
 //accuracy
 const double acc = 0.00000000000001;
@@ -218,7 +219,7 @@ double calc_mod(double x, double y) {
 
 //sinx
 //-inf<x<+inf
-double calc_sin(double x) { //x를 sinA의 범위 안으로 변환, 입력, 출력
+double calc_sin(double x) { //x를 sinA의 유효범위 안으로 변환, 입력, 출력
 	double a = calc_mod(x, 2*pi);
 	int index = 1;
 	if (a < 0) {
@@ -238,21 +239,47 @@ double calc_sin(double x) { //x를 sinA의 범위 안으로 변환, 입력, 출�
 		return (-1) * index * calc_sinA(2 * pi - a);
 	}
 }
+//e^x
+//-inf<x<+inf
+//도출되는 값이 표시범위 안쪽이면 출력함.
+//도출되는 값이 표시범위를 넘은 것에 대한 오류 처리가 필요
+double calc_exp(double x) {
+	int cnt = 0;
+	double sum = 0.0;
+	double u = calc_powInte(e, (int)x);
+	printf("u: %.15Lf\n", u);
+	while (1) {
+		double memory = sum;
+		sum = sum + (u/calc_facto(cnt))*calc_powInte(x- (int)x, cnt);
+		printf("e^x: x: %.15Lf\n, cnt: %d\n, sum: %.15Lf\n, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
+		if (calc_abs(memory - sum) < acc) break;
+		cnt++;
+	}
+	return sum;
+}
+double arcsin(double x) {
+
+}
+//x^y
+//x>=0 , -inf<y<+inf
+double calc_pow(double x, double y) {
+	return calc_exp(y * calc_ln(x));
+}
 
 void main() {
 	double input = 0.0;
+	/*while (1) {
 
-	while (1) {
-
-		printf("lnx의 x입력: ");
+		printf("e^x의 x입력: ");
 		scanf_s("%Lf", &input);
 		printf("input: %.15Lf\n", input);
 		if (input == 100.0) {
 			break;
 		}
 		else {
-			printf("lnx: %.15Lf, facto: %d, powInte: %d\n", calc_ln(input), facto, powInte);
+			printf("e^x: %.15Lf, facto: %d, powInte: %d\n", calc_exp(input), facto, powInte);
 			//printf("ln0.1: %.15Lf, facto: %d, powInte: %d\n", calc_ln(0.0000000001), facto, powInte);
 		}
-	}
+	}*/
+	printf("pow: %.15Lf\n, facto: %d, powInte: %d\n", calc_pow(0.00123, 4), facto, powInte);
 }
