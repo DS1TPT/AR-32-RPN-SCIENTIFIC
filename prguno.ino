@@ -104,7 +104,8 @@ Copyright 2021, Lee Geon-goo, Won Jong-wan.
 #define EXP_LEN 3
 
 // 상수 정의
-const float64_t ACCURACY = fp64_sd(0.00001);
+const float64_t ACCURACY = (float64_t)0x3d06849b86a12b9bLLU; //정확도 몇 번째 자리까지인지. 목표는 10~11자리임.
+// 소수점 자리가 긴 상수값들은 라이브러리의 한계로 아래와 같이 16진수값 LLU로 직접 비트를 조작해야함..
 const float64_t piNum = (float64_t)0x400921fb54442d18LLU; // 원주율 3.1415926535897932
 const float64_t exponentialNum = (float64_t)0x4005bf0a8b145769LLU; // 자연로그의 밑 2.7182818284590452
 const byte ROWS = 4; // 행 버튼 개수
@@ -120,7 +121,7 @@ const char keysU[ROWS][COLS] = { // 아래 키패드
     {BTN_LOG, BTN_LN, BTN_EX, BTN_ROLLDOWN},
     {BTN_SHIFT, BTN_SIN, BTN_COS, BTN_TAN},
     {BTN_PWR, BTN_SQRT, BTN_RECIPROCAL, BTN_EXCHANGEXY},
-    {BTN_ENTER, BTN_CHS, BTN_EEX, BTN_CLX}
+    {BTN_ENTER, BTN_CHS, BTN_EEX, BTN_CLX}ㅗ
 };
 const byte rowPinsD[ROWS] = { 6, 7, 8, 9 }; // R1 ~ R4 차례대로 연결한 디지털 핀번호
 const byte colPinsD[COLS] = { 2, 3, 4, 5 }; // C1 ~ C4 차례대로 연결한 디지털 핀번호 
@@ -149,11 +150,12 @@ Keypad kpdU = Keypad(makeKeymap(keysU), rowPinsU, colPinsU, ROWS, COLS);
 Keypad kpdD = Keypad(makeKeymap(keysD), rowPinsD, colPinsD, ROWS, COLS);
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD. 작동이 되지 않으면 주소를 0x3F로 해볼 것
-
+const byte shiftArrow[8] = {B00000, B00100, B01110, B10101, B00100, B00100, B00100, B00000};
 
 // 프로그램 시작점
 void setup() {
     lcd.init(); //LCD 시작
+    lcd.createChar(BTN_SHIFT, shiftArrow);
     lcd.backlight();
     regX = fp64_sd(0.0);
     regY = fp64_sd(0.0);
@@ -177,11 +179,11 @@ void loop() {
             if (isShift) {
               printLCD(MODE_BUSY);
               if (buffer[0] != 0) bufferToRegX(true);
-              if (fp64_to_int8(fp64_compare(regX, fp64_sd(-459.67))) == 1) { //절대영도 보다 큰지 검사
+              if (fp64_compare(regX, fp64_sd(-459.67)) == 1) { //절대영도 보다 큰지 검사
 							  regX = calc_cToF(regX);
 							}
               else {
-							  errCode = ERR_OOR;
+							  errCode = ERR_MATH;
                 goto loop_err;
 							}//END
               isOp = true;
@@ -199,11 +201,11 @@ void loop() {
               printLCD(MODE_BUSY);
               if (buffer[0] != 0) bufferToRegX(true);
               //TODO: 섭씨 -> 화씨
-              if (fp64_to_int8(fp64_compare(regX, fp64_sd(-273.15))) == 1) { //절대영도 보다 높은지 검사
+              if (fp64_compare(regX, fp64_sd(-273.15)) == 1) { //절대영도 보다 높은지 검사
 								regX = calc_cToF(regX);
 							}
 							else {
-								errCode = ERR_OOR;
+								errCode = ERR_MATH;
                 goto loop_err;
 							}//END
               isOp = true;
@@ -359,7 +361,7 @@ void loop() {
               */
             }
             else {
-              if (!isBlockInput && !isEEX) szAppend(buffer, '.', BUF_LEN);
+              if (!isBlockInput && !isEEX && !isDecimal) szAppend(buffer, '.', BUF_LEN);
             }
             break;
 
@@ -507,6 +509,11 @@ void loop() {
             if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: ARCSIN
+              if (fp64_compare(regX, fp64_sd(1.0)) == 1 || fp64_compare(regX, fp64_sd(-1.0)) == -1) {
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
+              else regX = calc_arcsin(regX);
             }
             else {
               //TODO: SIN
@@ -520,7 +527,11 @@ void loop() {
             if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: ARCCOS
-              regX = calc_arccos(regX); //END
+              if (fp64_compare(regX, fp64_sd(1.0)) == 1 || fp64_compare(regX, fp64_sd(-1.0)) == -1) {
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
+              else regX = calc_arccos(regX);
             }
             else {
               //TODO: COS
@@ -548,7 +559,11 @@ void loop() {
             if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: x의 제곱
-              regX = calc_powInte(regX, fp64_sd(2.0)); //END
+              if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
+              else regX = calc_powInte(regX, fp64_sd(2.0)); //END
             }
             else {
               regX = calc_pow(regY, regX);
@@ -562,12 +577,24 @@ void loop() {
             if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               //TODO: y의 x제곱근
-              regX = calc_pow(regY, fp64_div(fp64_sd(1.0), regX)); //END
-              rollDownReg(false);
+              if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
+              else {
+                regX = calc_pow(regY, fp64_div(fp64_sd(1.0), regX)); //END
+                rollDownReg(false);
+              }
             }
             else {
               //TODO: 루트x
-              regX = calc_powInte(regX, fp64_sd(0.5)); //END
+              if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
+              else {
+                regX = calc_powInte(regX, fp64_sd(0.5)); //END
+              }
             }
             isOp = true;
             break;
@@ -590,8 +617,14 @@ void loop() {
             if (isShift) {
               if (buffer[0] != 0) bufferToRegX(true);
               //TODO: x!
-              regX = calc_facto(regX); //END
-              isOp = true;
+              if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
+              else {
+                regX = calc_facto(regX); //END
+                isOp = true;
+              }
             }
             else {
               float64_t tmpexchange = regX;
@@ -618,6 +651,7 @@ void loop() {
               rollUpReg(false);
               regX = stomem;
               regToStr();
+              isShift = false;
             }
             else {
               if (isEEX) isNegExp = !isNegExp;
@@ -636,6 +670,7 @@ void loop() {
             case BTN_EEX: //Shift: clear memory(for sto/rcl)
             if (isShift) {
               stomem = fp64_sd(0.0);
+              isShift = false;
             }
             else {
               isEEX = true;
@@ -652,6 +687,7 @@ void loop() {
               regX = fp64_sd(0.0);
               isEEX = false;
               isNegExp = false;
+              isDecimal = false;
             }
             break;
         }
@@ -737,8 +773,20 @@ void printLCD(byte mode) {
         return;
     }
     if (mode == MODE_RES) { // 결과값을 표시하는 부분
-        char *ptr = fp64_to_string(regX, 12, 10);
-        lcd.print(ptr);
+        char tmpOut[16];
+        char outExp[4] = { 0, };
+        memset(outBuf, 0, BUF_LEN);
+        szCpy(tmpOut, sizeof(tmpOut), fp64_to_string(regX, 16, 10));
+        char* p = szParse(tmpOut, "E");
+        szCpyZero(outBuf, BUF_LEN, tmpOut);
+        lcd.print(outBuf);
+        if (p != NULL) {
+          if (*p == '-') outExp[0] = '-';
+          else outExp[0] = '+';
+          szCpyZero(outExp + 1, EXP_LEN, ++p);
+          lcd.setCursor(13, 0);
+          lcd.print(outExp);
+        }
     }
     else if (mode == MODE_IN) { // 입력값을 표시하는 부분
         if (buffer[0] == 0) lcd.print("0.");
@@ -770,8 +818,8 @@ void printLCD(byte mode) {
     }
     lcd.setCursor(0, 1); // 아랫줄 처음으로 커서 설정
     if (isShift && mode != MODE_RES) { // Shift 눌렀으면 표시
-        lcd.setCursor(4, 1);
-        lcd.print("SHFT");
+        lcd.setCursor(6, 1);
+        lcd.write(BTN_SHIFT);
     }
     if (fp64_ds(stomem) != 0.0) {
         lcd.setCursor(8, 1);
@@ -840,6 +888,7 @@ void bufferToRegX(bool clrBuffer) { // 버퍼의 값을 레지스터 X로 복사
       memset(expBuf, 0, EXP_LEN);
       isEEX = false;
       isNegExp = false;
+      isDecimal = false;
     }
 }
 
@@ -867,7 +916,12 @@ void regToStr() { // regX에 새 값이 들어왔을 때, 그 값을 버퍼에 �
   memset(buffer, 0, BUF_LEN); // 작업하기 전 버퍼를 비움
   memset(expBuf, 0, EXP_LEN);
   szCpy(output, sizeof(output), fp64_to_string(regX, 16, 10));
-  char* p = szParse(output, "E");
+  char *p = output;
+  while(*p != 0) {
+    if (*p == '.') isDecimal = true;
+    p++;
+  }
+  p = szParse(output, "E");
   szCpyZero(buffer, BUF_LEN, output);
   if (p == NULL) { // E 없음
     isEEX = false;
@@ -1208,7 +1262,7 @@ float64_t calc_arctan(float64_t x) {
 
 float64_t calc_log(float64_t a) {
   //return calc_ln(a) / calc_ln(10);
-  return fp64_div(calc_ln(a), calc_ln(10));
+  return fp64_div(calc_ln(a), calc_ln(fp64_sd(10.0)));
 }
 
 float64_t calc_sqrt(float64_t x) {
@@ -1245,52 +1299,52 @@ float64_t calc_degreeToRad(float64_t a){
 
 float64_t calc_fToC(float64_t f) {
 	//return (f - 32) / 1.8;
-   return fp64_div(fp64_sub(f, 32), 1.8);
+   return fp64_div(fp64_sub(f, fp64_sd(32.0)), fp64_sd(1.8));
 }
 
 float64_t calc_cToF(float64_t c) {
 	//return (c * 1.8) + 32;
-   return fp64_add(fp64_mul(c, 1.8), 32);
+   return fp64_add(fp64_mul(c, fp64_sd(1.8)), fp64_sd(32.0));
 }
 
 float64_t calc_kgToIb(float64_t kg) {
 	//return kg / 0.453592;
-   return fp64_div(kg, 0.453592);
+   return fp64_div(kg, fp64_sd(0.453592));
 }
 
 float64_t calc_ibToKg(float64_t ib) {
 	//return ib * 0.453592;
-   return fp64_mul(ib, 0.453592);
+   return fp64_mul(ib, fp64_sd(0.453592));
 }
 
 float64_t calc_galToL(float64_t gal) {
 	//return gal * 3.785411784;
-   return fp64_mul(gal, 3.785411784);
+   return fp64_mul(gal, fp64_sd(3.785411784));
 }
 
 float64_t calc_LToGal(float64_t L) {
 	//return L / 3.785411784;
-   return fp64_div(L, 3.785411784);
+   return fp64_div(L, fp64_sd(3.785411784));
 }
 
 float64_t calc_mileToKm(float64_t mile) {
 	//return mile * 1.60934;
-   return fp64_mul(mile, 1.60934);
+   return fp64_mul(mile, fp64_sd(1.60934));
 }
 
 float64_t calc_kmToMile(float64_t km) {
 	//return km / 1.60934;
-   return fp64_div(km, 1.60934);
+   return fp64_div(km, fp64_sd(1.60934));
 }
 
 float64_t calc_inToMm(float64_t in) {
 	//return in * 25.4;
-   return fp64_mul(in, 25.4);
+   return fp64_mul(in, fp64_sd(25.4));
 }
 
 float64_t calc_mmToIn(float64_t mm) {
 	//return mm / 25.4;
-   return fp64_div(mm, 25.4);
+   return fp64_div(mm, fp64_sd(25.4));
 }
 
 //#pragma GCC pop_options
