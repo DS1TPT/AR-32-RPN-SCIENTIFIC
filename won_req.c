@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+const double acc = 0.00000000000001;
+
 double calc_facto(double x) {
 	if (x == 0) {
 		return 1;
@@ -151,6 +153,65 @@ float64_t calc_powInte(float64_t x, float64_t y) {
 		}
 	}
 	return n;
+}
+
+double calc_root(double x) {
+	double n = x / 2;
+	while (1) {
+		double memory = n;
+		if (calc_powInte(n, 2) == x) {
+			break;
+		}
+		else {
+			n = (calc_powInte(n, 2) + x) / (2 * n);
+			printf("root running now n= %Lf, memory= %Lf, bool= %d\n" //테스트용 출력항
+				, n, memory, calc_abs(memory - n) < 0.00001);
+			if (calc_abs(memory - n) < acc) {
+				break;
+			}
+		}
+	}
+	return n;
+}
+
+double calc_lnA(double x) { //return ln(x+1)
+	int cnt = 1;
+	double sum = 0.0;
+	double memory = 1.0;
+	while (1) {
+		sum = sum + calc_powInte(-1.0, cnt + 1) * calc_powInte(x, cnt) / cnt;
+		printf("A: cnt: %d, sum: %.15Lf, abs: %.15Lf\n", cnt, sum, calc_abs(memory - sum));
+		if (calc_abs(memory - sum) < acc) break;
+		memory = sum;
+		cnt++;
+	}
+	return sum;
+}
+
+double calc_ln(double x) {
+	double x0;
+	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
+		return calc_lnA(x - 1);
+	}
+	else if (x > 2) { //lnB에 대입 후 lnA 이용
+		x0 = x;
+	}
+	else { //lnA에 1/1+x - 1 대입 후  - 붙임
+		x0 = 1/x;
+	}
+	int cnt = 0;
+	while (x0 >= 2) {
+		x0 = calc_root(x0);
+		cnt++;
+	}
+	if (x>2){
+		printf("return! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
+		return -calc_ln(1 / x0) * calc_powInte(2, cnt);
+	}
+	else {
+		printf("turn! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
+		return calc_ln(1 / x0) * calc_powInte(2, cnt);
+	}
 }
 
 void main(){
