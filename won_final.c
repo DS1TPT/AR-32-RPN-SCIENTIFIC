@@ -63,16 +63,16 @@ double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 �
 //x^(1/2)
 //x>=0
 double calc_root(double x) {
-	double n = x / 2;
+	double n = x / 2;// 개선 좀 하고 싶음
 	double m0;
 	int cnt = 0;
 	double outMemory = 0.0; 
 	while (1) {
 		double memory = n;
 		if (cnt % 2 == 1) {
-			printf("true 1 : cnt : %d\n", cnt);
+			//printf("true 1 : cnt : %d\n", cnt);
 			if (outMemory == n){
-				printf("true 2 : outMemory: %.15Lf \n", outMemory);
+				//printf("true 2 : outMemory: %.15Lf \n", outMemory);
 				break;
 			}
 			outMemory = n;
@@ -83,8 +83,8 @@ double calc_root(double x) {
 		}
 		else {
 			n = (m0 + x) / (2 * n);
-			printf("root running now n= %.15Lf, memory= %.15Lf, outMemory: %.15Lf, bool= %d\n" //테스트용 출력항
-				, n, memory, outMemory, calc_abs(memory - n) < acc);
+			//printf("root running now n= %.15Lf, memory= %.15Lf, outMemory: %.15Lf, bool= %d\n" //테스트용 출력항
+				//, n, memory, outMemory, calc_abs(memory - n) < acc);
 			if (calc_abs(memory - n) < acc) {
 				break;
 			}
@@ -101,7 +101,7 @@ double calc_lnA(double x) { //return ln(x+1)
 	while (1) {
 		double memory = sum;
 		sum = sum + calc_powInte(-1.0, cnt + 1) * calc_powInte(x, cnt) / cnt;
-		printf("lnA: cnt: %d, sum: %.15Lf, abs: %.15Lf\n", cnt, sum, calc_abs(memory - sum));
+		//printf("lnA: cnt: %d, sum: %.15Lf, abs: %.15Lf\n", cnt, sum, calc_abs(memory - sum));
 		if (calc_abs(memory - sum) < acc) break;
 		cnt++;
 	}
@@ -160,11 +160,11 @@ double calc_ln(double x) {
 		cnt++;
 	}
 	if (x>2){
-		printf("return! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
+		//printf("return! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
 		return -calc_ln(1 / x0) * calc_powInte(2, cnt);
 	}
 	else {
-		printf("turn! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
+		//printf("turn! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
 		return calc_ln(1 / x0) * calc_powInte(2, cnt);
 	}
 }
@@ -176,7 +176,7 @@ double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
 	while (1) {
 		double memory = sum;
 		sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
-		printf("SinA: x: %.15Lf, cnt: %d, sum: %.15Lf, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
+		//printf("SinA: x: %.15Lf, cnt: %d, sum: %.15Lf, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
 		if (calc_abs(memory - sum) < acc) break;
 		cnt++;
 	}
@@ -212,7 +212,7 @@ double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
 double calc_mod(double x, double y) {
 	double x0 = x / y;
 	x0 = x0 - (int)x0;
-	printf("modToSin: %.15Lf\n", x0 * y );
+	//printf("modToSin: %.15Lf\n", x0 * y );
 	return x0 * y ;
 }
 
@@ -251,7 +251,7 @@ void main() {
 			break;
 		}
 		else {
-			printf("sinx: %.15Lf, facto: %d, powInte: %d\n", calc_ln(input), facto, powInte);
+			printf("lnx: %.15Lf, facto: %d, powInte: %d\n", calc_ln(input), facto, powInte);
 			//printf("ln0.1: %.15Lf, facto: %d, powInte: %d\n", calc_ln(0.0000000001), facto, powInte);
 		}
 	}
