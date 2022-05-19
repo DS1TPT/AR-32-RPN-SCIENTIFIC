@@ -357,6 +357,32 @@ double calc_ln(double x, int loop) {
 	}
 }
 
+double calc_makeA(double x) {
+	double n = 2*pi;
+	if (x == 0) {
+		return 0;
+	}
+	else if (x> n) {
+		printf("1.");
+		while (x > n) {
+			n += 2 * pi;
+			printf("n: %f\n",n );
+		};
+		return 2*pi - n + x;
+	}
+	else if (x<n &&x>=0){
+		return x;
+	}
+	else {
+		printf("2.");
+		n = -2*pi;
+		while (n > x) {
+			n -= 2 * pi;
+		}
+		return x - n;
+	}
+}
+
 
 void main() {
 	printf("log= %f, pow= %f, sin= %f, cos= %f, arccos= %f, arctan= %f"
