@@ -319,6 +319,45 @@ double calc_lnZeroToTwo(double input) {
 	return sum;
 }
 
+double calc_lnA(double x, int loop) { //return ln(x+1)
+	int cnt = 1;
+	double sum = 0.0;
+	while (cnt <=loop) {
+		sum = sum+ calc_powInte(-1.0, cnt + 1) * calc_powInte(x, cnt) / cnt;
+		printf("A: cnt: %d, sum: %.15Lf\n", cnt, sum);
+		cnt++;
+	}
+	return sum;
+}
+
+double calc_lnB(double x, int loop) { //return ln(x) -ln(x-1)
+	int cnt = 1;
+	double sum = 0.0;
+	while (cnt <=loop) {
+		sum = sum + 1 / (cnt * calc_powInte(x, cnt));
+		printf("B: cnt: %d, sum: %.15Lf\n", cnt, sum);
+		cnt++;
+	}
+	return sum;
+}
+
+double calc_ln(double x, int loop) {
+	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
+		return calc_lnA(x-1, loop);
+	}
+	else if(x > 0 && x < 0.5) { //lnB에 대입 후 lnA 이용
+		return - calc_lnB(x+1, loop) - calc_lnA(x, loop);
+	}
+	else if (x > 1.5 && x < 2.0) { //lnB에 대입 후 lnA 이용
+		return calc_lnB(x, loop) + calc_lnA(x - 2, loop);
+	}
+	else { //lnA에 1/1+x - 1 대입 후  - 붙임
+		printf("return! : %.15Lf\n", 1 / x);
+		return -calc_ln(1 / x, loop);
+	}
+}
+
+
 void main() {
 	printf("log= %f, pow= %f, sin= %f, cos= %f, arccos= %f, arctan= %f"
 		, log(0.4), pow(3, -8), sin(0.2), cos(0.1), arccos(0.1), arctan(0.2));
