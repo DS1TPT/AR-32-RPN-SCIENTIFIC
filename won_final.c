@@ -202,6 +202,29 @@ double calc_sinMakeA(double x) {
 	}
 }
 
+/* 수정중
+double calc_sin(double x) { //x를 sinA의 범위 안으로 변환, 입력, 출력
+	double a = calc_sinMakeA(x);
+	int index = 0;
+	if (a < 0) {
+		index = 1;
+		a = -a;
+	}
+	if (a >= 0 && a <= pi / 2) {
+		return calc_sinA(a);
+	}
+	else if (a > pi/2 && a <= pi) {
+
+	}
+	else if (a > pi && a <= pi*3/2) {
+
+	}
+	else { // a > pi*3/2 && s<= 2*pi
+
+	}
+}
+*/
+
 void main() {
 	printf("MakeA: %.15Lf", calc_sinMakeA(-4*pi-pi/2));
 	//printf("ln0.1: %.15Lf, facto: %d, powInte: %d\n", calc_ln(0.0000000001), facto, powInte);
