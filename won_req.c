@@ -193,10 +193,10 @@ double calc_ln(double x) {
 	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
 		return calc_lnA(x - 1);
 	}
-	else if (x > 2) { //lnB에 대입 후 lnA 이용
+	else if (x > 2) {
 		x0 = x;
 	}
-	else { //lnA에 1/1+x - 1 대입 후  - 붙임
+	else { 
 		x0 = 1/x;
 	}
 	int cnt = 0;
