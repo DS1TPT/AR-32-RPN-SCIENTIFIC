@@ -2,12 +2,15 @@
 
 const double pi = 3.14159265359;
 
+//accuracy
 const double acc = 0.00000000000001;
-const double loop = 1000;
+//const double loop = 1000;
 
+//테스트용 전역변수
 int facto = 0;
 int powInte = 0;
 
+//절댓값
 double calc_abs(double x) {
 	if (x > 0) {
 		return x;
@@ -57,12 +60,13 @@ double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 �
 	return n;
 }
 
+//x^(1/2)
+//x>=0
 double calc_root(double x) {
 	double n = x / 2;
 	double m0;
 	int cnt = 0;
 	double outMemory = 0.0; 
-	double memory = 0.0;
 	while (1) {
 		double memory = n;
 		if (cnt % 2 == 1) {
@@ -90,21 +94,20 @@ double calc_root(double x) {
 	return n;
 }
 
+//ln함수의 부속품
 double calc_lnA(double x) { //return ln(x+1)
 	int cnt = 1;
 	double sum = 0.0;
-	double memory = 1.0;
 	while (1) {
+		double memory = sum;
 		sum = sum + calc_powInte(-1.0, cnt + 1) * calc_powInte(x, cnt) / cnt;
 		printf("lnA: cnt: %d, sum: %.15Lf, abs: %.15Lf\n", cnt, sum, calc_abs(memory - sum));
 		if (calc_abs(memory - sum) < acc) break;
-		memory = sum;
 		cnt++;
 	}
 	return sum;
 }
-
-double calc_lnB(double x, int loop) { //return ln(x) -ln(x-1)
+/*double calc_lnB(double x, int loop) { //return ln(x) -ln(x-1)
 	int cnt = 1;
 	double sum = 0.0;
 	double memory = 1.0;
@@ -116,17 +119,16 @@ double calc_lnB(double x, int loop) { //return ln(x) -ln(x-1)
 		cnt++;
 	}
 	return sum;
-}
-
-double calc_ln_test(double x, int loop) {
+}*/
+/*double calc_ln_test(double x, int loop) {
 	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
-		return calc_lnA(x - 1, loop);
+		return calc_lnA(x - 1);
 	}
 	else if (x > 0 && x < 0.5) { //lnB에 대입 후 lnA 이용
-		return -calc_lnB(x + 1, loop) + calc_lnA(x, loop);
+		return -calc_lnB(x + 1, loop) + calc_lnA(x);
 	}
 	else if (x > 1.5 && x < 2.0) { //lnB에 대입 후 lnA 이용
-		return calc_lnB(x, loop) + calc_lnA(x - 2, loop);
+		return calc_lnB(x, loop) + calc_lnA(x - 2);
 	}
 	else { //lnA에 1/1+x - 1 대입 후  - 붙임
 		double x0 = x;
@@ -138,7 +140,9 @@ double calc_ln_test(double x, int loop) {
 		printf("return! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
 		return -calc_ln_test(1/x0, loop)*calc_powInte(2,cnt);
 	}
-}
+}*/
+//lnx
+//x>0
 double calc_ln(double x) {
 	double x0;
 	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
@@ -165,67 +169,90 @@ double calc_ln(double x) {
 	}
 }
 
+//sin함수의 부속품
 double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
 	int cnt = 0;
 	double sum = 0.0;
-	double memory = 1.0;
 	while (1) {
+		double memory = sum;
 		sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
-		printf("SinA: cnt: %d, sum: %.15Lf, abs: %.15Lf\n", cnt, sum, calc_abs(memory - sum));
+		printf("SinA: x: %.15Lf, cnt: %d, sum: %.15Lf, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
 		if (calc_abs(memory - sum) < acc) break;
-		memory = sum;
 		cnt++;
 	}
 	return sum;
 }
-
-double calc_sinMakeA(double x) {
+/*double calc_sinMakeA(double x) {
 	double n = 0;
-	if (x < pi && x > -pi) {
+	double tpi = 2 * pi;
+	if (x < tpi && x > -tpi) {
 		return x;
 	}
-	else if (x >= pi) {
+	else if (x >= tpi) {
 		printf("+.");
 		while (x >= n) { //n이 x와 같아지거나 x보다 커지기 전까지 반복
-			n += pi;
+			n += tpi;
 			printf("n: %.14Lf, x: %.15Lf\n", n, x);
 		}; // n - x = pi - A
-		return pi - n + x;
+		printf("MakeA: %.15Lf\n", tpi - n + x);
+		return tpi - n + x;
 	}
 	else {
 		printf("-.");
 		while (x <= n) { //n이 x와 같아지거나 x보다 작아지기 전까지 반복
-			n -= pi;
+			n -= tpi;
 			printf("n: %.14Lf, x: %.15Lf\n", n, x);
 		} // n - x = pi - A
-		return -pi + x - n;
+		printf("MakeA: %.15Lf\n", -tpi - n + x);
+		return -tpi + x - n;
 	}
+}*/
+//실수 범위 모듈러 연산
+//sin연산에 쓰임
+double calc_mod(double x, double y) {
+	double x0 = x / y;
+	x0 = x0 - (int)x0;
+	printf("modToSin: %.15Lf\n", x0 * y );
+	return x0 * y ;
 }
 
-/* 수정중
+//sinx
+//-inf<x<+inf
 double calc_sin(double x) { //x를 sinA의 범위 안으로 변환, 입력, 출력
-	double a = calc_sinMakeA(x);
-	int index = 0;
+	double a = calc_mod(x, 2*pi);
+	int index = 1;
 	if (a < 0) {
-		index = 1;
+		index = -1;
 		a = -a;
 	}
 	if (a >= 0 && a <= pi / 2) {
-		return calc_sinA(a);
+		return index*calc_sinA(a);
 	}
 	else if (a > pi/2 && a <= pi) {
-
+		return index * calc_sinA(pi-a);
 	}
 	else if (a > pi && a <= pi*3/2) {
-
+		return (-1) * index * calc_sinA(a - pi);
 	}
 	else { // a > pi*3/2 && s<= 2*pi
-
+		return (-1) * index * calc_sinA(2 * pi - a);
 	}
 }
-*/
 
 void main() {
-	printf("MakeA: %.15Lf", calc_sinMakeA(-4*pi-pi/2));
-	//printf("ln0.1: %.15Lf, facto: %d, powInte: %d\n", calc_ln(0.0000000001), facto, powInte);
+	double input = 0.0;
+
+	while (1) {
+
+		printf("lnx의 x입력: ");
+		scanf_s("%Lf", &input);
+		printf("input: %.15Lf\n", input);
+		if (input == 100.0) {
+			break;
+		}
+		else {
+			printf("sinx: %.15Lf, facto: %d, powInte: %d\n", calc_ln(input), facto, powInte);
+			//printf("ln0.1: %.15Lf, facto: %d, powInte: %d\n", calc_ln(0.0000000001), facto, powInte);
+		}
+	}
 }
