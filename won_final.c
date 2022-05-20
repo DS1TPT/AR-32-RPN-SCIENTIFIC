@@ -22,6 +22,7 @@ double calc_abs(double x) {
 }
 //x!
 //x>=0
+//펙토리얼 연산
 double calc_facto(double x) {
 	if (x == 0) {
 		return 1;
@@ -38,6 +39,7 @@ double calc_facto(double x) {
 }
 // x^y
 // x >= 0  -inf<y(정수)<+inf
+// y가 정수인 x에 대한 거듭제곱 연산
 double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 것으로 예상되어 미리 복제해둠.
 	double n = x;
 	if (y == 0) {
@@ -60,6 +62,7 @@ double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 �
 }
 //x^(1/2)
 //x>=0
+//바빌로니아법을 활용한 root 
 double calc_root(double x) {
 	double n = x / 2;// 개선 좀 하고 싶음
 	double m0;
@@ -107,6 +110,7 @@ double calc_lnA(double x) { //return ln(x+1)
 }
 //lnx
 //x>0
+//자연로그함수
 double calc_ln(double x) {
 	double x0;
 	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
@@ -133,6 +137,8 @@ double calc_ln(double x) {
 	}
 }
 //sin함수의 부속품
+//sinx의 메클로린 연산부
+//-pi에서 +pi까지 입력 받는 함수
 double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
 	int cnt = 0;
 	double sum = 0.0;
