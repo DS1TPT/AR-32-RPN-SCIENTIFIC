@@ -7,10 +7,10 @@ const double e = 2.71828182846;
 const double acc = 0.00000000000001;
 const double loop = 1000;
 
-//테스트용 전역변수
+//연산량 확인용 전역변수
 int facto = 0;
 int powInte = 0;
-
+//abs
 //절댓값
 double calc_abs(double x) {
 	if (x > 0) {
@@ -20,13 +20,12 @@ double calc_abs(double x) {
 		return -x;
 	}
 }
-
-//x!을 출력하는 함수
-//x는 0보다 크거나 같은 정수 범위
+//x!
+//x>=0
 double calc_facto(double x) {
 	if (x == 0) {
 		return 1;
-		facto++;
+		//facto++; 연산량 확인용
 	}
 	else {
 		double sum = 1;
@@ -37,9 +36,8 @@ double calc_facto(double x) {
 		return sum;
 	}
 }
-
-/* x^y 값을 내보내는 함수
-x는 0보다 크거나 같은 실수 범위 y는 정수 범위*/
+// x^y
+// x >= 0  -inf<y(정수)<+inf
 double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 것으로 예상되어 미리 복제해둠.
 	double n = x;
 	if (y == 0) {
@@ -60,7 +58,6 @@ double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 �
 	}
 	return n;
 }
-
 //x^(1/2)
 //x>=0
 double calc_root(double x) {
@@ -94,8 +91,8 @@ double calc_root(double x) {
 	}
 	return n;
 }
-
 //ln함수의 부속품
+//메클로린 연산 파트
 double calc_lnA(double x) { //return ln(x+1)
 	int cnt = 1;
 	double sum = 0.0;
@@ -178,6 +175,19 @@ double calc_sin(double x) { //x를 sinA의 유효범위 안으로 변환, 입력
 		return (-1) * index * calc_sinA(2 * pi - a);
 	}
 }
+//cosx
+//-inf<x<+inf
+//sinx에 의존
+double calc_cos(double x) {
+	return calc_sin(x + (pi / 2));
+}
+//tanx
+//-inf<x<+inf (2pi*n + pi/2에서 +inf로 발산, 2pi*n + pi*3/2에서 -inf로 발산) 
+//sinx, cosx에 의존
+//발산 범위가 입력될 시 오류처리에 신경써야함.
+double calc_tan(double x) {
+	return calc_sin(x) / calc_cos(x);
+}
 //e^x
 //-inf<x<+inf
 //도출되는 값이 표시범위 안쪽이면 출력함.
@@ -198,15 +208,14 @@ double calc_exp(double x) {
 }
 //x^y
 //x>=0 , -inf<y<+inf
+//exp, lnx 사용
 double calc_pow(double x, double y) {
 	return calc_exp(y * calc_ln(x));
 }
-double calc_cos(double x) {
-	return calc_sin(x + (pi / 2));
-}
-double calc_tan(double x) {
-	return calc_sin(x) / calc_cos(x);
-}
+//arcsinx
+// -1<x<1
+//정확도 이슈가 있음
+//이론적으로 정확해지면 따로 말함
 double calc_arcsin(double x) {
 	double sum = 0.0;
 	int cnt = 0;
@@ -226,9 +235,15 @@ double calc_arcsin(double x) {
 	}
 	return sum;
 }
+//arccosx
+// -1<x<1
+//arcsinx에 의존
 double calc_arccos(double x) {
 	return pi / 2 - calc_arcsin(x);
 }
+//arctanx
+// -inf<x<+inf
+//arcsinx에 의존
 double calc_arctan(double x) {
 	double index = 1;
 	if (x < 0) index = -1;
