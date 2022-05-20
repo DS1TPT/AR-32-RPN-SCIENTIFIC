@@ -593,7 +593,7 @@ void loop() {
                 goto loop_err;
               }
               else {
-                regX = calc_powInte(regX, fp64_sd(0.5)); //END
+                regX = calc_root(regX); //END
               }
             }
             isOp = true;
@@ -1039,173 +1039,179 @@ float64_t calc_facto(float64_t x) {
   }
 }
 
-/* x^y 값을 내보내는 함수
-x는 0보다 크거나 같은 실수 범위 y는 정수 범위*/
-/*
+// x^y
+// x >= 0  -inf<y(정수)<+inf
 float64_t calc_powInte(float64_t x, float64_t y) { //pow를 만들기 위해 필요할 것으로 예상되어 미리 복제해둠.
-  float64_t n = x;
-  if (fp64_compare(y, fp64_sd(0.0)) == 0) {
-    n = fp64_sd(1.0);
-  }
-  else if (fp64_compare(y, fp64_sd(0.0)) == 1) {
-    for (int i = 1; fp64_compare(fp64_sd(i), y) != -1; i++) {
-      n = fp64_mul(n, x);
-    }
-  }
-  else {
-    for (int i = 1; fp64_compare(fp64_sd(i), y) != 1; i--) {
-      n = fp64_div(n, x);
-    }
-  }
-  return n;
-}
-*/
-float64_t calc_powInte(float64_t x, float64_t y) { 
 	float64_t n = x;
-	float64_t i = y;
 	if (fp64_compare(y, fp64_sd(0.0)) == 0) {
-		n = fp64_sd(1.0);
+		n = 1;
 	}
-	else if (fp64_compare(y, fp64_sd(0.0)) == 1) {
-		while (fp64_compare(i, fp64_sd(1.0)) != 0) {
-			n = fp64_mul(n, x);
-			i = fp64_sub(i, fp64_sd(1.0));
+	else if (y > 0) {
+		for (int i = 1; fp64_compare(fp64_uint16_to_float64(i), y) == -1; i++) {
+			//n *= x;
+      n = fp64_mul(n, x);
 		}
 	}
 	else {
-		while (fp64_compare(i, fp64_sd(1.0)) != 0) {
-			n = fp64_div(n, x);
-			i = fp64_add(i, fp64_sd(1.0));
+		for (int i = 1; fp64_compare(fp64_uint16_to_float64(i), y) == 1; i--) {
+			//n = n / x;
+      n = fp64_div(n, x);
 		}
 	}
 	return n;
 }
 
+//e^x
+//-inf<x<+inf
+//도출되는 값이 표시범위 안쪽이면 출력함.
+//도출되는 값이 표시범위를 넘은 것에 대한 오류 처리가 필요
 float64_t calc_exp(float64_t x) {
-  float64_t i = fp64_sd(0.0);
-  float64_t u = fp64_sd(0.0);
-  float64_t sum = fp64_sd(0.0);
-  float64_t memory = fp64_sd(1.0);
-  while (1) {
-    if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) {
-      break;
-    }
-    memory = sum;
-    u = fp64_div(calc_powInte(x, i), calc_facto(i));
-    sum = fp64_add(sum, u);
-    i = fp64_add(i, fp64_sd(1.0));
-  }
-  return sum;
-}
-
-float64_t calc_ln(float64_t input) {
-	float64_t index = fp64_sd(0.0);
-	float64_t x;
-	//input >= 2
-	if (fp64_compare(input, fp64_sd(2.0)) >= 0) { //2보다 큰지 확인
-		x = fp64_div(fp64_sd(1.0), fp64_sub(input, fp64_sd(1.0)));
-		index = fp64_sd(1.0);
-	}
-	else {
-		x = fp64_sub(input, fp64_sd(1.0));
-	}
-	float64_t i = fp64_sd(1.0);
-	float64_t memory = fp64_sd(1.0);
+	unsigned cnt = 0;
 	float64_t sum = fp64_sd(0.0);
-	//abs(memory -sum) >= ACCURACY
-	while (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) >= 0) {
-		float64_t u;
-		//(int)i % 2 == 1
-		if (fp64_to_int8(fp64_fmod(i, fp64_sd(2.0))) == 1) { //수정 바람 3
-			u = fp64_sd(1.0);
-		}
-		else {
-			u = fp64_sd(-1.0);
-		}
-		float64_t d = fp64_div(calc_powInte(x, i), i);
-		memory = sum;
-		sum = fp64_add(sum, fp64_mul(u, d));
-		i = fp64_add(i, fp64_sd(1.0));
-	}
-	//index == 1.0
-	if (fp64_compare(index, fp64_sd(1.0)) == 0.0) { //input이 2보다 컸으면 -를 붙여서 출력
-		return fp64_mul(sum, fp64_sd(-1.0));
-	}
-	else {
-		return sum;
-	}
-}
-
-/*x^y를 출력하는 함수
-x는 0보다 크거나 같은 실수 범위, y는 실수 범위*/
-float64_t calc_pow(float64_t x, float64_t y) {
-  float64_t YlnX = fp64_mul(y, calc_ln(x));
-  return calc_exp(YlnX);
-}
-
-//sinx를 출력하는 함수
-//x는 실수 범위
-/*
-float64_t calc_sin(float64_t x) {
-  float64_t sum = fp64_sd(0.0);
-  float64_t u = fp64_sd(0.0);
-  float64_t i = fp64_sd(0.0);
-  float64_t memory = fp64_sd(1.0);
-  while (1) {
-    if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) {
-      break;
-    }
-    memory = sum;
-    // u = calc_powInte(-1, i) * calc_powInte(x, 2 * i + 1) / calc_facto(2 * i + 1);
-    u = fp64_div(fp64_mul(calc_powInte(fp64_sd(-1.0), i), calc_powInte(x, fp64_add(fp64_mul(i, fp64_sd(2.0)), fp64_sd(1.0)))), calc_facto(fp64_add(fp64_mul(fp64_sd(2.0), i), fp64_sd(1.0))));
-    sum = fp64_add(sum, u);
-    i = fp64_add(i, fp64_sd(1.0));
-  }
-  return sum;
-}
-*/
-
-float64_t calc_sin(float64_t x){
-	float64_t sum = fp64_sd(0.0);
-	float64_t u = fp64_sd(0.0);
-	float64_t d = fp64_sd(1.0);
-	volatile long int i = 0;
-	float64_t memory = fp64_sd(1.0);
-	while (i<100) {
-		memory = sum; 
-		u = calc_powInte(fp64_sd(-1.0), fp64_int32_to_float64(i));
-		d = fp64_add(fp64_int32_to_float64(i), fp64_sd(1.0));
-		d = fp64_mul(fp64_sd(2.0), d);
-		u = fp64_mul(u, calc_powInte(x, d));
-		d = fp64_add(fp64_int32_to_float64(i), fp64_sd(1.0));
-		d = fp64_mul(fp64_sd(2.0), d);
-		u = fp64_div(u, calc_facto(d));
-		//printf("sum= %f30, u= %f i= %d\n", sum, u, i);
-		sum = fp64_add(sum, u);
-		i++;
+	float64_t u = calc_powInte(exponentialNum, x);
+	while (1) {
+		float64_t memory = sum;
+		//sum = sum + (u / calc_facto(cnt)) * calc_powInte(x - (int)x, cnt);
+    sum = fp64_add(sum, fp64_mul(fp64_div(u, calc_facto(fp64_uint16_to_float64(cnt))), calc_powInte(fp64_sub(x, fp64_round(x)), fp64_uint16_to_float64(cnt))));
+		if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) break;
+		cnt++;
 	}
 	return sum;
 }
 
+//x^y
+//x>=0 , -inf<y<+inf
+//exp, lnx 사용
+float64_t calc_pow(float64_t x, float64_t y) {
+	return calc_exp(fp64_mul(y, calc_ln(x)));
+}
 
-//cosx를 출력하는 함수
-//x는 실수 범위
+//x^(1/2)
+//x>=0
+float64_t calc_root(float64_t x) {
+  float64_t n = fp64_div(x, fp64_sd(2.0));
+	float64_t m0;
+	int cnt = 0;
+	float64_t outMemory = fp64_sd(0.0);
+	while (1) {
+		float64_t memory = n;
+		if (cnt % 2 == 1) {
+			if (fp64_compare(outMemory, n) == 0) {
+				break;
+			}
+			outMemory = n;
+		}
+		m0 = calc_powInte(n, fp64_sd(2.0));
+		if (fp64_compare(m0, x) == 0) {
+			break;
+		}
+		else {
+			//n = (m0 + x) / (2 * n);
+      n = fp64_div(fp64_add(m0, x), fp64_mul(fp64_sd(2.0), n));
+			if (calc_abs(memory - n) < acc) {
+				break;
+			}
+			cnt++;
+		}
+	}
+	return n;
+}
+
+//ln함수의 부속품
+//메클로린 연산 파트
+float64_t calc_lnA(float64_t x) { //return ln(x+1)
+	long cnt = 1;
+	float64_t sum = fp64_sd(0.0);
+	while (1) {
+		float64_t memory = sum;
+		//sum = sum + calc_powInte(-1.0, cnt + 1) * calc_powInte(x, cnt) / cnt;
+    sum = fp64_add(sum, fp64_mul(calc_powInte(fp64_sd(-1.0), fp64_int32_to_float64(cnt + 1)), fp64_div(calc_powInte(x, fp64_int32_to_float64(cnt)), fp64_int32_to_float64(cnt))));
+		//if (calc_abs(memory - sum) < acc) break;
+    if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) break;
+		cnt++;
+	}
+	return sum;
+}
+
+//lnx
+//x>0
+float64_t calc_ln(float64_t x) {
+	float64_t x0;
+	//if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
+  if (fp64_compare(x, fp64_sd(0.5)) >= 0 && fp64_compare(x, fp64_sd(1.5)) <= 0) {
+		return calc_lnA(fp64_sub(x, fp64_sd(1.0)));
+	}
+	else if (fp64_compare(x, fp64_sd(2.0)) == 1) { //lnB에 대입 후 lnA 이용
+		x0 = x;
+	}
+	else { //lnA에 1/1+x - 1 대입 후  - 붙임
+    x0 = fp64_div(fp64_sd(1.0), x);
+	}
+	long cnt = 0;
+	while (fp64_compare(x0, fp64_sd(2.0)) >= 0) {
+		x0 = calc_root(x0);
+		cnt++;
+	}
+	if (x > 2) {
+		//return -calc_ln(1 / x0) * calc_powInte(2, cnt);
+    return fp64_mul(fp64_neg(calc_ln(fp64_div(fp64_sd(1.0), x0))), calc_powInte(fp64_sd(2.0), fp64_int32_to_float64(cnt)));
+	}
+	else {
+		//return calc_ln(1 / x0) * calc_powInte(2, cnt);
+    return fp64_mul(calc_ln(fp64_div(fp64_sd(1.0), x0)), calc_powInte((fp64_sd(2.0), fp64_int32_to_float64(cnt))));
+	}
+}
+//sin함수의 부속품
+double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
+	int cnt = 0;
+	double sum = 0.0;
+	while (1) {
+		double memory = sum;
+		sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
+		//printf("SinA: x: %.15Lf, cnt: %d, sum: %.15Lf, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
+		if (calc_abs(memory - sum) < acc) break;
+		cnt++;
+	}
+	return sum;
+}
+//실수 범위 모듈러 연산
+//sin연산에 쓰임
+double calc_mod(double x, double y) {
+	double x0 = x / y;
+	x0 = x0 - (int)x0;
+	//printf("modToSin: %.15Lf\n", x0 * y );
+	return x0 * y;
+}
+//sinx
+//-inf<x<+inf
+double calc_sin(double x) { //x를 sinA의 유효범위 안으로 변환, 입력, 출력
+	double a = calc_mod(x, 2 * pi);
+	int index = 1;
+	if (a < 0) {
+		index = -1;
+		a = -a;
+	}
+	if (a >= 0 && a <= pi / 2) {
+		return index * calc_sinA(a);
+	}
+	else if (a > pi / 2 && a <= pi) {
+		return index * calc_sinA(pi - a);
+	}
+	else if (a > pi && a <= pi * 3 / 2) {
+		return (-1) * index * calc_sinA(a - pi);
+	}
+	else { // a > pi*3/2 && s<= 2*pi
+		return (-1) * index * calc_sinA(2 * pi - a);
+	}
+}
+
+
+//cosx
+//-inf<x<+inf
+//sinx에 의존
 float64_t calc_cos(float64_t x) {
-  float64_t sum = fp64_sd(0.0);
-  float64_t u = fp64_sd(0.0);
-  float64_t i = fp64_sd(0.0);
-  float64_t memory = fp64_sd(1.0);
-  while (1) {
-    if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) {
-      break;
-    }
-    memory = sum;
-    //u = calc_powInte(-1, i) * calc_powInte(x, 2 * i) / calc_facto(2 * i);
-    u = fp64_div(fp64_mul(calc_powInte(fp64_sd(-1.0), i), calc_powInte(x, fp64_mul(fp64_sd(2.0), i))), calc_facto(fp64_mul(fp64_sd(2.0), i)));
-    sum = fp64_add(sum, u);
-    i = fp64_add(i, fp64_sd(1.0));
-  }
-  return sum;
+	//return calc_sin(x + (pi / 2));
+  return calc_sin(fp64_add(x, fp64_div(piNum, 2)));
 }
 
 //tanx를 출력하는 함수
@@ -1240,22 +1246,11 @@ float64_t calc_arccos(float64_t x) {
   return fp64_sub(fp64_div(piNum, fp64_sd(2.0)), calc_arcsin(x));
 }
 
-float64_t calc_arctan(float64_t x) {
-  float64_t i = fp64_sd(0.0);
-  float64_t u = fp64_sd(0.0);
-  float64_t sum = fp64_sd(0.0);
-  float64_t memory = fp64_sd(1.0);
-  while (1) {
-    if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) {
-      break;
-    }
-    memory = sum;
-    //u = calc_powInte(-1, i) * calc_powInte(x, 2 * i + 1) / (2 * i + 1);
-    u = fp64_div(fp64_mul(calc_powInte(fp64_sd(-1.0), i), calc_powInte(x, fp64_add(fp64_mul(fp64_sd(2.0), i), fp64_sd(1.0)))), fp64_add(fp64_mul(fp64_sd(2.0), i), fp64_sd(1.0)));
-    sum = fp64_add(sum, u);
-    i = fp64_add(i, fp64_sd(1.0));
-  }
-  return sum;
+double calc_arctan(double x) {
+	double index = 1;
+	if (x < 0) index = -1;
+	double t = (1 + (1 / calc_powInte(x, 2)));
+	return index*calc_arcsin(calc_root(1 / t));
 }
 
 //#pragma GCC pop_options
