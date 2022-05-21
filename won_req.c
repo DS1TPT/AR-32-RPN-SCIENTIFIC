@@ -48,3 +48,24 @@ float64_t calc_exp(float64_t x) {
 	}
 	return sum;
 }
+float64_t calc_sinA(float64_t x) { //-pi에서 +pi까지 입력 받을 함수
+	long cnt = 0;
+	float64_t cntF = fp64_sd(0.0);
+	float64_t cntTfo = fp64_sd(0.0);
+	float64_t memory = fp64_sd(0.0);
+	float64_t sum = fp64_sd(0.0);
+	while (1) {
+		memory = sum;
+		//sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
+		cntF = fp64_int32_to_float64(cnt);
+		cntTfo = fp64_mul(2, fp64_add(cntF, 1));
+		sum = calc_powInte(fp64_sd(-1.0), cntF);
+		sum = fp64_mul(sum, calc_powInte(x, cntTfo));
+		sum = fp64_div(sum, calc_facto(cntTfo));
+		sum = fp64_add(memory, sum);
+
+		if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) break;
+		cnt++;
+	}
+	return sum;
+}
