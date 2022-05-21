@@ -711,10 +711,12 @@ void proc() { // 처리 함수
         printLCD(MODE_RES); // 결과 출력
     }
     isShift = false;
+    /*
     if (getExp(&regX) > 99 || getExp(&regX) < -99 || getExp(&regY) > 99 || getExp(&regY) < -99 || getExp(&regZ) > 99 || getExp(&regZ) < -99 || getExp(&regT) > 99 || getExp(&regT) < -99 ) {
         errCode = ERR_OOR;
         goto proc_err;
     }
+    */
     return;
 
     proc_err: // 처리 함수에서 생긴 오류 처리
@@ -1174,7 +1176,7 @@ float64_t calc_sinA(float64_t x) { //-pi에서 +pi까지 입력 받을 함수
 	while (1) {
 		memory = sum;
 		//sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
-    sum = fp64_add(sum, fp64_div(fp64_mul(calc_powInte(fp64_sd(-1.0), fp64_int32_to_float64(cnt)), calc_powInte(x, fp64_mul(fp64_sd(2.0), fp64_int32_to_float64(cnt + 1)))) , calc_facto(fp64_mul(2, fp64_int32_to_float64(cnt + 1)))));
+    sum = fp64_add(sum, fp64_div(fp64_mul(calc_powInte(fp64_sd(-1.0), fp64_int32_to_float64(cnt)), calc_powInte(x, fp64_add(fp64_mul(fp64_sd(2.0), fp64_int32_to_float64(cnt)), fp64_sd(1.0)))), calc_facto(fp64_add(fp64_mul(fp64_sd(2.0), fp64_int32_to_float64(cnt)), fp64_sd(1.0)))));
 		//if (calc_abs(memory - sum) < acc) break;
     if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) break;
 		cnt++;
@@ -1205,10 +1207,10 @@ float64_t calc_sin(float64_t x) { //x를 sinA의 유효범위 안으로 변환, 
     return fp64_mul(fp64_int32_to_float64(index), calc_sinA(fp64_sub(piNum, a)));
   }
   else if (fp64_compare(a, piNum) == 1 && fp64_compare(a, fp64_div(fp64_mul(piNum, fp64_sd(3.0)), fp64_sd(2.0))) <= 0) {
-    return fp64_mul(fp64_sd(-1.0), fp64_mul(fp64_int32_to_float64(index), calc_sinA(fp64_sub(a, piNum))));
+    return fp64_neg(fp64_mul(fp64_int32_to_float64(index), calc_sinA(fp64_sub(a, piNum))));
   }
   else { // a > pi*3/2 && s<= 2*pi
-    return fp64_mul(fp64_sd(-1.0), fp64_mul(fp64_int32_to_float64(index), calc_sinA(fp64_sub(fp64_mul(fp64_sd(2.0), piNum), a))));
+    return fp64_neg(fp64_mul(fp64_int32_to_float64(index), calc_sinA(fp64_sub(fp64_mul(fp64_sd(2.0), piNum), a))));
   }
 }
 
