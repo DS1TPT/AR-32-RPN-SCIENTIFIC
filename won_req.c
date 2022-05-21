@@ -62,9 +62,9 @@ float64_t calc_sinA(float64_t x) { //-pi에서 +pi까지 입력 받을 함수
 		sum = calc_powInte(fp64_sd(-1.0), cntF);
 		sum = fp64_mul(sum, calc_powInte(x, cntTfo));
 		sum = fp64_div(sum, calc_facto(cntTfo));
-		sum = fp64_add(memory, sum);
 
-		if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) break;
+		if (fp64_compare(calc_abs(sum), ACCURACY) == -1) break;
+		sum = fp64_add(memory, sum);
 		cnt++;
 	}
 	return sum;
