@@ -33,7 +33,7 @@ float64_t calc_mod(float64_t x, float64_t y) {
 float64_t calc_exp(float64_t x) {
 	long cnt = 0;
 	float64_t sum = fp64_sd(0.0);
-	float64_t u = calc_powInte(exponentialNum, fp64_round(x));
+	float64_t u = calc_powInte(exponentialNum, fp64_sub(x, calc_inteCut(x)));
 	if (fp64_isinf(u) == 1) {
 		return u;
 	}
