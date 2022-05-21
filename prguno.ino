@@ -49,10 +49,6 @@ Copyright 2021, Lee Geon-goo, Won Jong-wan.
    limitations under the License.
 */
 
-
-
-/* fp64관련 연산은 모두 fp64 라이브러리 함수로 처리해야 하는지 확인한다 */
-// float64_t 형변환은 sd함수로
 // 값을 견주는 건 fp64_compare 리턴값을 fp64_to_int8 함수(반환형 char)로 받은 다음 해당 값이 -1,0,1 가운데
 // 어느 것인지를 확인해서 해야 함. -1은 A<B, 0은 ==, 1은 A>B임.
 
@@ -377,6 +373,7 @@ void loop() {
               regX = piNum;
             }
             regToStr();
+            isShift = false;
             break;
 
             case '-': //Shift: mm -> in
@@ -426,11 +423,11 @@ void loop() {
               regX = fp64_mul(regY, fp64_div(regX, fp64_sd(100.0)));
             }
             else {
-              if (fp64_compare(regX, fp64_sd(0.0)) == fp64_sd(0.0)) {
+              if (fp64_compare(regX, fp64_sd(0.0)) == 0) {
                   errCode == ERR_DIVZERO;
                   goto loop_err;
               }
-              regX = fp64_div(regY, regX);
+              else regX = fp64_div(regY, regX);
             }
             rollDownReg(false);
             isOp = true;
@@ -476,8 +473,9 @@ void loop() {
                 bufferToRegX(true);
                 rollUpReg(true);
               }
-              regX = fp64_mul(piNum, fp64_sd(2.0));
+              regX = exponentialNum;
               regToStr();
+              isShift = false;
             }
             else {
               printLCD(MODE_BUSY);
@@ -682,12 +680,7 @@ void loop() {
               clearMem(false);
             }
             else {
-              memset(buffer, 0, BUF_LEN);
-              memset(expBuf, 0, EXP_LEN);
-              regX = fp64_sd(0.0);
-              isEEX = false;
-              isNegExp = false;
-              isDecimal = false;
+              clearX();
             }
             break;
         }
@@ -754,18 +747,18 @@ void printLCD(byte mode) {
     lcd.setCursor(0, 0); // 윗줄 처음으로 커서 설정
     if (mode == MODE_ERR) { // 오류 표시
         if (errCode == ERR_OOR) {
-            lcd.print("?OUT OF RANGE");
+            lcd.print("OUT OF RANGE");
         }
         else if (errCode == ERR_DIVZERO) {
-            lcd.print("?DIVIDE BY 0");
+            lcd.print("DIVIDE BY 0");
         }
         else if (errCode == ERR_MATH) {
-            lcd.print("?MATH ERROR");
+            lcd.print("MATH ERROR");
         }
         // 다른 오류 코드 표시 부분 구현하기
 
         lcd.setCursor(0, 1); //PRESS CLX 표시
-        lcd.print("PRESS CLX");
+        lcd.print("PRESS CLx");
         errWait(); // 오류 입력 대기
         return; // 함수 종료
     }
@@ -775,7 +768,7 @@ void printLCD(byte mode) {
         return;
     }
     if (mode == MODE_RES) { // 결과값을 표시하는 부분
-        char tmpOut[16];
+        char tmpOut[18] = { 0, };
         char outExp[4] = { 0, };
         memset(outBuf, 0, BUF_LEN);
         szCpy(tmpOut, sizeof(tmpOut), fp64_to_string(regX, 16, 10));
@@ -913,7 +906,19 @@ void clearMem(bool reset) { // 메모리 비우는 함수
     }
 }
 
+void clearX() {
+    memset(buffer, 0, BUF_LEN);
+    memset(expBuf, 0, EXP_LEN);
+    regX = fp64_sd(0.0);
+    isEEX = false;
+    isNegExp = false;
+    isDecimal = false;
+}
 void regToStr() { // regX에 새 값이 들어왔을 때, 그 값을 버퍼에 넣어줌
+  if (fp64_compare(regX, fp64_sd(0.0)) == 0) {
+    clearX();
+    return;
+  }
   char output[16];
   memset(buffer, 0, BUF_LEN); // 작업하기 전 버퍼를 비움
   memset(expBuf, 0, EXP_LEN);
@@ -937,7 +942,7 @@ void regToStr() { // regX에 새 값이 들어왔을 때, 그 값을 버퍼에 �
 }
 
 int getExp(float64_t* pReg) { // 지수부를 구해 정수로 반환하는 함수
-  char tmp[18];
+  char tmp[18] = { 0, };
   szCpy(tmp, sizeof(tmp), fp64_to_string(*pReg, 16, 10));
   char* p = szParse(tmp, "E");
   if (p == NULL) return 0;
