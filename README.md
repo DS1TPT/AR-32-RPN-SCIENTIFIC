@@ -1,4 +1,4 @@
-# AR-32 RPN SCIENTIFIC PROJECT (Previous name: AR-35)
+# AR-32 RPN SCIENTIFIC PROJECT
 
 개발중: 파일 이름이 won 으로 시작하면 원종완이 쓴 코드임
 
@@ -12,11 +12,8 @@ SOURCE CODE FOR UNO, BETA VERSION
 개발환경: 아두이노 우노(Arduino Uno)
 
 개발 목표: 아두이노 우노로 세계최초의 휴대용 공학용 계산기인 HP-35의 현대화 버전을 만든다.
-
 HP-35의 버튼 배열에 기반하고, 기능 또한 HP-35에 있던 모든 기능을 포함한다. 단, 버튼이 32개로
-
 HP-35보다 적고 배열도 다르므로, 버튼 배열을 재배치하고 Shift로 여러 기능을 구현한다.
-
 HP-35의 35주년 기념판인 HP-35s의 기능을 다소 참고한다.
 
 
