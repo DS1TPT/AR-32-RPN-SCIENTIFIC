@@ -66,9 +66,17 @@ double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 �
 double calc_toInte(double s, double* n) {
 	double cnt = 0;
 	while (1) {
-		if (s - trunc(s) == 0) break;
-		s = s * 10;
-		cnt += 1;
+		if (s - trunc(s) == 0) {
+			while (fmod(s, 10) == 0) {
+				s = s / 10;
+				cnt++;
+			}
+			if(fmod(s, 10) != 0) break;
+		}
+		else {
+			s = s * 10;
+			cnt ++;
+		}
 	}
 	*n = cnt;
 	return s;
@@ -76,9 +84,15 @@ double calc_toInte(double s, double* n) {
 double calc_approxi(double s) {
 	double a, n;
 	a = calc_toInte(s, &n);
-	double powerT = calc_powInte(10,n);
-	if (a < 10) {
+	double powerT = calc_powInte(10,n/2);
+	if (s <= 1) {
+		return s;
+	}
+	else if (a < 10) {
 		return (0.29 * a + 0.89) * powerT;
+	}
+	else if (a > 250) {
+		return (-190 / (a + 20) + 10) * powerT;
 	}
 	else {
 		return (0.089 * a + 2.8) * powerT;
@@ -94,10 +108,10 @@ double calc_root(double x) {
 	double outMemory = 0.0;
 	while (1) {
 		double memory = n;
-		if (cnt % 2 == 1) {
-			//printf("true 1 : cnt : %d\n", cnt);
+		if (cnt % 200== 1) {
+			printf("true 1 : cnt : %d\n", cnt);
 			if (outMemory == n) {
-				//printf("true 2 : outMemory: %.15Lf \n", outMemory);
+				printf("true 2 : outMemory: %.15Lf \n", outMemory);
 				break;
 			}
 			outMemory = n;
@@ -108,8 +122,8 @@ double calc_root(double x) {
 		}
 		else {
 			n = (m0 + x) / (2 * n);
-			//printf("root running now n= %.15Lf, memory= %.15Lf, outMemory: %.15Lf, bool= %d\n" //테스트용 출력항
-				//, n, memory, outMemory, calc_abs(memory - n) < acc);
+			printf("root running now cnt= %d, n= %.15Lf, memory= %.15Lf, outMemory: %.15Lf, bool= %d\n" //테스트용 출력항
+				, cnt, n, memory, outMemory, calc_abs(memory - n) < acc);
 			if (calc_abs(memory - n) < acc) {
 				break;
 			}
@@ -175,27 +189,7 @@ double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
 	}
 	return sum;
 }
-/*float64_t calc_sinA(float64_t x) { //-pi에서 +pi까지 입력 받을 함수
-	long cnt = 0;
-	float64_t cntF = fp64_sd(0.0);
-	float64_t cntTfo = fp64_sd(0.0);
-	float64_t memory = fp64_sd(0.0);
-	float64_t sum = fp64_sd(0.0);
-	while (1) {
-		memory = sum;
-		//sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
-		cntF = fp64_int32_to_float64(cnt);
-		cntTfo = fp64_mul(2, fp64_add(cntF, 1));
-		sum = calc_powInte(fp64_sd(-1.0), cntF);
-		sum = fp64_mul(sum, calc_powInte(x, cntTfo));
-		sum = fp64_div(sum, calc_facto(cntTfo));
 
-		if (fp64_compare(calc_abs(sum), ACCURACY) == -1) break;
-		sum = fp64_add(memory, sum);
-		cnt++;
-	}
-	return sum;
-}*/
 //실수 범위 모듈러 연산
 //sin연산에 쓰임
 double calc_mod(double x, double y) {
@@ -287,7 +281,7 @@ double calc_arcsin(double x) {
 	double outMemory = 0.0;
 	while (1) {
 		double memory = sum;
-		if (cnt % 2 == 1) {
+		if (cnt % 100 == 1) {
 			if (outMemory == memory) {
 				break;
 			}
@@ -317,6 +311,9 @@ double calc_arctan(double x) {
 }
 
 void main() {
-	double x = 32.1231412634;
-	printf("arctan(%.15Lf): %.15lf, facto: %d, powInte: %d\n", x, calc_arctan(x), facto, powInte);
+	double x = 100;
+	double n = 0;
+	//unsigned long long int* test = &x;
+	//printf("%llu", *test);
+	printf("toInte(%.15Lf): %.15lf, facto: %d, powInte: %d\n", x, calc_approxi(x), facto, powInte);
 }
