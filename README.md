@@ -5,8 +5,6 @@
 
 
 
-SOURCE CODE FOR UNO, BETA VERSION
-
 아두이노 RPN(Reverse Polish Notation) 공학용 계산기 소스코드 - UNO등 8b AVR용
 
 개발환경: 아두이노 우노(Arduino Uno)
