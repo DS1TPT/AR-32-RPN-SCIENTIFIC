@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 const double pi = 3.14159265359;
 const double e = 2.71828182846;
@@ -10,6 +11,7 @@ const double loop = 1000;
 //연산량 확인용 전역변수
 int facto = 0;
 int powInte = 0;
+
 //abs
 //절댓값
 double calc_abs(double x) {
@@ -60,11 +62,33 @@ double calc_powInte(double x, double y) { //pow를 만들기 위해 필요할 �
 	}
 	return n;
 }
+//root 근사를 위한 함수
+double calc_toInte(double s, double* n) {
+	double cnt = 0;
+	while (1) {
+		if (s - trunc(s) == 0) break;
+		s = s * 10;
+		cnt += 1;
+	}
+	*n = cnt;
+	return s;
+}
+double calc_approxi(double s) {
+	double a, n;
+	a = calc_toInte(s, &n);
+	double powerT = calc_powInte(10,n);
+	if (a < 10) {
+		return (0.29 * a + 0.89) * powerT;
+	}
+	else {
+		return (0.089 * a + 2.8) * powerT;
+	}
+}
 //x^(1/2)
 //x>=0
 //바빌로니아법을 활용한 root 
 double calc_root(double x) {
-	double n = x / 2;// 개선 좀 하고 싶음
+	double n = calc_approxi(x);
 	double m0;
 	int cnt = 0;
 	double outMemory = 0.0;
@@ -116,10 +140,10 @@ double calc_ln(double x) {
 	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
 		return calc_lnA(x - 1);
 	}
-	else if (x > 2) { //lnB에 대입 후 lnA 이용
+	else if (x > 2) { 
 		x0 = x;
 	}
-	else { //lnA에 1/1+x - 1 대입 후  - 붙임
+	else { 
 		x0 = 1 / x;
 	}
 	int cnt = 0;
@@ -145,12 +169,33 @@ double calc_sinA(double x) { //-pi에서 +pi까지 입력 받을 함수
 	while (1) {
 		double memory = sum;
 		sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
-		//printf("SinA: x: %.15Lf, cnt: %d, sum: %.15Lf, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
+		printf("SinA: x: %e, cnt: %d, sum: %e, memory: %e, abs: %e\n", x, cnt, sum, memory, calc_abs(memory - sum));
 		if (calc_abs(memory - sum) < acc) break;
 		cnt++;
 	}
 	return sum;
 }
+/*float64_t calc_sinA(float64_t x) { //-pi에서 +pi까지 입력 받을 함수
+	long cnt = 0;
+	float64_t cntF = fp64_sd(0.0);
+	float64_t cntTfo = fp64_sd(0.0);
+	float64_t memory = fp64_sd(0.0);
+	float64_t sum = fp64_sd(0.0);
+	while (1) {
+		memory = sum;
+		//sum = sum + calc_powInte(-1, cnt) * calc_powInte(x, 2 * cnt + 1) / calc_facto(2 * cnt + 1);
+		cntF = fp64_int32_to_float64(cnt);
+		cntTfo = fp64_mul(2, fp64_add(cntF, 1));
+		sum = calc_powInte(fp64_sd(-1.0), cntF);
+		sum = fp64_mul(sum, calc_powInte(x, cntTfo));
+		sum = fp64_div(sum, calc_facto(cntTfo));
+
+		if (fp64_compare(calc_abs(sum), ACCURACY) == -1) break;
+		sum = fp64_add(memory, sum);
+		cnt++;
+	}
+	return sum;
+}*/
 //실수 범위 모듈러 연산
 //sin연산에 쓰임
 double calc_mod(double x, double y) {
@@ -202,15 +247,29 @@ double calc_exp(double x) {
 	int cnt = 0;
 	double sum = 0.0;
 	double u = calc_powInte(e, (int)x);
-	printf("u: %.15Lf\n", u);
+	if (isinf(u)) {
+		return u;
+	}
+	printf("u: %e\n", u);
 	while (1) {
 		double memory = sum;
-		sum = sum + (u / calc_facto(cnt)) * calc_powInte(x - (int)x, cnt);
-		printf("e^x: x: %.15Lf\n, cnt: %d\n, sum: %.15Lf\n, abs: %.15Lf\n", x, cnt, sum, calc_abs(memory - sum));
+		sum = sum + (u / calc_facto(cnt)) *
+			calc_powInte(x - (int)x, cnt);
+		printf("\ne^x: x: %e\n, cnt: %d\n, sum: %e\n, memory: %e\n abs: %e\n, u: %e\n"
+			, x, cnt, sum, memory, calc_abs(memory - sum), u);
 		if (calc_abs(memory - sum) < acc) break;
 		cnt++;
 	}
 	return sum;
+}
+double calc_inteCut(double x) {
+	double x1 = round(x);
+	if (x1 <= x) {
+		return x -x1;
+	}
+	else {
+		return x - x1 +1.0;
+	}
 }
 //x^y
 //x>=0 , -inf<y<+inf
@@ -228,8 +287,8 @@ double calc_arcsin(double x) {
 	double outMemory = 0.0;
 	while (1) {
 		double memory = sum;
-		if (cnt % 2 ==1) {
-			if (outMemory == memory){
+		if (cnt % 2 == 1) {
+			if (outMemory == memory) {
 				break;
 			}
 			outMemory = memory;
@@ -254,10 +313,10 @@ double calc_arctan(double x) {
 	double index = 1;
 	if (x < 0) index = -1;
 	double t = (1 + (1 / calc_powInte(x, 2)));
-	return index*calc_arcsin(calc_root(1 / t));
+	return index * calc_arcsin(calc_root(1 / t));
 }
 
 void main() {
-	double x = -12312415;
-	printf("arctan(%.1lf): %.15Lf, facto: %d, powInte: %d\n", x, calc_arctan(x), facto, powInte);
+	double x = 32.1231412634;
+	printf("arctan(%.15Lf): %.15lf, facto: %d, powInte: %d\n", x, calc_arctan(x), facto, powInte);
 }
