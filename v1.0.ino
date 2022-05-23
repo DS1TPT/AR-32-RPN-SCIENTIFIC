@@ -1,6 +1,6 @@
 /*
 * AR-32 RPN SCIENTIFIC PROJECT 
-* SOURCE CODE FOR UNO STABLE? v1.0
+* SOURCE CODE FOR UNO
 *
 * 아두이노 RPN(Reverse Polish Notation) 공학용 계산기 소스코드 - UNO등 8b AVR용
 * 개발환경: 아두이노 우노(Arduino Uno)
@@ -52,8 +52,6 @@ Copyright 2021, Lee Geon-goo, Won Jong-wan.
 #include <fp64lib.h> // 64비트 부동소수점
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
-#include <stdlib.h>
-#include <string.h>
 
 // 버튼 명령별로 쓸 문자 지정
 #define BTN_PWR 1 // pow
@@ -106,10 +104,10 @@ const byte ROWS = 4; // 행 버튼 개수
 const byte COLS = 4; // 열 버튼 개수
 
 const char keysD[ROWS][COLS] = { // 윗 키패드
-    {'7', '8', '9', '-'},
+    {'1', '2', '3', '-'},
     {'4', '5', '6', '+'},
-    {'1', '2', '3', 'x'},
-    {'0', '.', 'p', '/'}
+    {'7', '8', '9', 'x'},
+    {'.', '0', 'p', '/'}
 };
 const char keysU[ROWS][COLS] = { // 아래 키패드
     {BTN_LOG, BTN_LN, BTN_EX, BTN_ROLLDOWN},
@@ -162,7 +160,6 @@ void setup() {
     lcd.print("RPN SCIENTIFIC");
     delay(2000); // 2초 동안 보여줌
     printLCD(MODE_IN); // LCD 입력모드로 출력
-    //Serial.begin(9600); // 디버깅 할 때 아니면 주석처리함
 }
 
 void loop() {
@@ -589,6 +586,7 @@ void loop() {
             if (buffer[0] != 0) bufferToRegX(true);
             if (isShift) {
               stomem = regX;
+              isShift = false;
             }
             else {
               rollUpReg(true);
@@ -895,9 +893,7 @@ void regToStr() { // regX에 새 값이 들어왔을 때, 그 값을 버퍼에 �
   }
   p = szParse(output, "E"); // E가 있으면 parse함
   szCpyZero(buffer, BUF_LEN, output); // parse한 문자열을 입력 가수부 버퍼에 널문자까지만 복사
-  if (p == NULL) { // E가 없을 때(szParse 함수는 parse할 문자가 없으면 NULL 반환)
-    isEEX = false; // E 마커 거짓으로 설정
-  }
+  if (p == NULL) isEEX = false; // E가 없을 때(szParse 함수는 parse할 문자가 없으면 NULL 반환) E 마커 거짓으로 설정
   else { // E 있음
     isEEX = true; // E 마커 참
     if (*p == '-') isNegExp = true; // 부호값 넣음
