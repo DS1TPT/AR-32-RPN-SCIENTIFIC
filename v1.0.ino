@@ -893,7 +893,9 @@ void regToStr() { // regX에 새 값이 들어왔을 때, 그 값을 버퍼에 �
   }
   p = szParse(output, "E"); // E가 있으면 parse함
   szCpyZero(buffer, BUF_LEN, output); // parse한 문자열을 입력 가수부 버퍼에 널문자까지만 복사
-  if (p == NULL) isEEX = false; // E가 없을 때(szParse 함수는 parse할 문자가 없으면 NULL 반환) E 마커 거짓으로 설정
+  if (p == NULL) { // E가 없을 때(szParse 함수는 parse할 문자가 없으면 NULL 반환) E 마커 거짓으로 설정
+    isEEX = false;
+  }
   else { // E 있음
     isEEX = true; // E 마커 참
     if (*p == '-') isNegExp = true; // 부호값 넣음
