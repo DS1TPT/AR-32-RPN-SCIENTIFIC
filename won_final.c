@@ -84,15 +84,12 @@ double calc_toInte(double s, double* n) {
 double calc_approxi(double s) {
 	double a, n;
 	a = calc_toInte(s, &n);
-	double powerT = calc_powInte(10,n/2);
-	if (s <= 1) {
-		return s;
-	}
-	else if (a < 10) {
+	double powerT = calc_powInte(10, trunc(n/2));
+	if (a < 10) {
 		return (0.29 * a + 0.89) * powerT;
 	}
 	else if (a > 250) {
-		return (-190 / (a + 20) + 10) * powerT;
+		return (( - 190 / (a + 20)) + 10) * powerT;
 	}
 	else {
 		return (0.089 * a + 2.8) * powerT;
@@ -154,7 +151,7 @@ double calc_ln(double x) {
 	if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
 		return calc_lnA(x - 1);
 	}
-	else if (x > 2) { 
+	else if (x >= 2) { 
 		x0 = x;
 	}
 	else { 
@@ -165,7 +162,7 @@ double calc_ln(double x) {
 		x0 = calc_root(x0);
 		cnt++;
 	}
-	if (x > 2) {
+	if (x >= 2) {
 		//printf("return! : %.15Lf, cnt: %d\n", 1 / x0, cnt);
 		return -calc_ln(1 / x0) * calc_powInte(2, cnt);
 	}
@@ -201,7 +198,7 @@ double calc_mod(double x, double y) {
 //sinx
 //-inf<x<+inf
 double calc_sin(double x) { //x를 sinA의 유효범위 안으로 변환, 입력, 출력
-	double a = calc_mod(x, 2 * pi);
+	double a = fmod(x, 2 * pi);
 	int index = 1;
 	if (a < 0) {
 		index = -1;
@@ -311,9 +308,9 @@ double calc_arctan(double x) {
 }
 
 void main() {
-	double x = 100;
+	double x = 2;
 	double n = 0;
 	//unsigned long long int* test = &x;
 	//printf("%llu", *test);
-	printf("toInte(%.15Lf): %.15lf, facto: %d, powInte: %d\n", x, calc_approxi(x), facto, powInte);
+	printf("ln(%.15Lf): %.15lf, facto: %d, powInte: %d\n", x, calc_ln(x), facto, powInte);
 }
