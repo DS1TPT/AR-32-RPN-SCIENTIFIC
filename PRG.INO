@@ -720,7 +720,12 @@ void loop() {
               isShift = false;
             }
             else {
-              isEEX = true;
+              if (!isEEX) isEEX = true;
+              else { // 지수 입력 취소
+                isEEX = false;
+                isNegExp = false;
+                memset(expBuf, 0, EXP_LEN);
+              }
             }
             break;
 
@@ -1133,6 +1138,8 @@ float64_t calc_facto(float64_t x) {
       if (fp64_compare(i, x) == 1) break;
       else {
         sum = fp64_mul(sum, i);
+        if (fp64_isinf(sum)) return 0x7ff0000000000000LLU; // INF
+        if (fp64_isnan(sum)) return 0x7ff0000000000001LLU; // NaN
         i = fp64_add(i, fp64_sd(1.0));
       }
     }
@@ -1151,12 +1158,16 @@ float64_t calc_powInte(float64_t x, float64_t y) { //pow를 만들기 위해 필
     for (long i = 1; fp64_compare(fp64_int32_to_float64(i), y) == -1; i++) {
       //n *= x;
       n = fp64_mul(n, x);
+      if (fp64_isinf(n)) return 0x7ff0000000000000LLU; // INF
+      if (fp64_isnan(n)) return 0x7ff0000000000001LLU; // NaN
     }
   }
   else {
     for (long i = 1; fp64_compare(fp64_int32_to_float64(i), y) == 1; i--) {
       //n = n / x;
       n = fp64_div(n, x);
+      if (fp64_isinf(n)) return 0x7ff0000000000000LLU; // INF
+      if (fp64_isnan(n)) return 0x7ff0000000000001LLU; // NaN
     }
   }
   return n;
@@ -1164,13 +1175,15 @@ float64_t calc_powInte(float64_t x, float64_t y) { //pow를 만들기 위해 필
 
 //x - round(x)를 대체
 //mod와 exp에 쓰임
-float64_t calc_inteCut(float64_t x){
+float64_t calc_inteCut(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
 	float64_t x1 = fp64_round(x);
 	float64_t result = fp64_sub(x, x1);
-	if(fp64_compare(x1, x) <= 0){
+	if (fp64_compare(x1, x) <= 0) {
 		return result;
 	}
-	else{
+	else {
 		return fp64_add(result, fp64_sd(1.0));
 	}
 }
@@ -1178,12 +1191,22 @@ float64_t calc_inteCut(float64_t x){
 //실수 범위 모듈러 연산
 //sin연산에 쓰임
 float64_t calc_mod(float64_t x, float64_t y) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
+  if (fp64_isinf(y)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(y)) return 0x7ff0000000000001LLU; // NaN
 	float64_t x0 = fp64_div(x, y);
+  if (fp64_isinf(x0)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x0)) return 0x7ff0000000000001LLU; // NaN
 	float64_t x1 = calc_inteCut(x0);
+  if (fp64_isinf(x1)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x1)) return 0x7ff0000000000001LLU; // NaN
 	return fp64_mul(x1, y);
 }
 
 float64_t calc_exp(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   long n = 0;
   float64_t sum = fp64_sd(0.0);
   float64_t ex0 = calc_powInte(exponentialNum, fp64_trunc(x));
@@ -1192,13 +1215,18 @@ float64_t calc_exp(float64_t x) {
   float64_t frac = fp64_sd(0.0);
   float64_t powd = fp64_sd(0.0);
   if (fp64_isinf(ex0)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(ex0)) return 0x7ff0000000000001LLU; // NaN
   while (1) {
-    if (fp64_isinf(sum)) return 0x7ff0000000000000LLU; // INF
-    if (fp64_isnan(sum)) return 0x7ff0000000000001LLU; // NaN
     sumPrev = sum;
     frac = fp64_div(ex0, calc_facto(fp64_int32_to_float64(n)));
     powd = calc_powInte(xDiff, fp64_int32_to_float64(n));
+    if (fp64_isinf(frac)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(frac)) return 0x7ff0000000000001LLU; // NaN
+    if (fp64_isinf(powd)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(powd)) return 0x7ff0000000000001LLU; // NaN
     sum = fp64_add(sumPrev, fp64_mul(frac, powd));
+    if (fp64_isinf(sum)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(sum)) return 0x7ff0000000000001LLU; // NaN
     if (fp64_compare(calc_abs(fp64_sub(sumPrev, sum)), ACCURACY) == -1) break;
     n++;
   }
@@ -1209,40 +1237,19 @@ float64_t calc_exp(float64_t x) {
 //x>=0 , -inf<y<+inf
 //exp, lnx 사용
 float64_t calc_pow(float64_t x, float64_t y) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
+  if (fp64_isinf(y)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(y)) return 0x7ff0000000000001LLU; // NaN
   return calc_exp(fp64_mul(y, calc_ln(x)));
-}
-
-//root 근사를 위한 함수
-
-float64_t calc_toInte(float64_t s, float64_t* n) {
-	float64_t cnt = 0;
-	while (1) {
-		if (fp64_compare(fp64_sub(s, fp64_trunc(s)), fp64_sd(0.0)) == 0) break;
-    s = fp64_mul(s, fp64_sd(10.0));
-    cnt = fp64_add(cnt, fp64_sd(1.0));
-	}
-	*n = cnt;
-	return s;
-}
-
-float64_t calc_approx(float64_t s) {
-	float64_t a, n;
-	a = calc_toInte(s, &n);
-	float64_t powerT = calc_powInte(fp64_sd(10.0), n);
-	if (fp64_compare(a, fp64_sd(10.0)) == -1) {
-		//return (0.29 * a + 0.89) * powerT;
-    return fp64_mul(powerT, fp64_add(fp64_mul(fp64_sd(0.29), a), fp64_sd(0.89)));
-	}
-	else {
-		//return (0.089 * a + 2.8) * powerT;
-    return fp64_mul(powerT, fp64_add(fp64_mul(fp64_sd(0.089), a), fp64_sd(2.8)));
-	}
 }
 
 
 //ln함수의 부속품
 //메클로린 연산 파트
 float64_t calc_lnA(float64_t x) { //return ln(x+1)
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   long cnt = 1;
   float64_t sum = fp64_sd(0.0);
   float64_t memory = sum;
@@ -1251,6 +1258,8 @@ float64_t calc_lnA(float64_t x) { //return ln(x+1)
     //sum = sum + calc_powInte(-1.0, cnt + 1) * calc_powInte(x, cnt) / cnt;
     sum = fp64_add(sum, fp64_mul(calc_powInte(fp64_sd(-1.0), fp64_int32_to_float64(cnt + 1)), fp64_div(calc_powInte(x, fp64_int32_to_float64(cnt)), fp64_int32_to_float64(cnt))));
     //if (calc_abs(memory - sum) < acc) break;
+    if (fp64_isinf(sum)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(sum)) return 0x7ff0000000000001LLU; // NaN
     if (fp64_compare(calc_abs(fp64_sub(memory, sum)), ACCURACY) == -1) break;
     cnt++;
   }
@@ -1261,6 +1270,8 @@ float64_t calc_lnA(float64_t x) { //return ln(x+1)
 //x>0
 float64_t calc_ln(float64_t x) {
   float64_t x0;
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   //if (x >= 0.5 && x <= 1.5) { //lnA에 x-1 대입
   if (fp64_compare(x, fp64_sd(0.5)) >= 0 && fp64_compare(x, fp64_sd(1.5)) <= 0) {
     return calc_lnA(fp64_sub(x, fp64_sd(1.0)));
@@ -1273,6 +1284,8 @@ float64_t calc_ln(float64_t x) {
   }
   long cnt = 0;
   while (fp64_compare(x0, fp64_sd(2.0)) >= 0) {
+    if (fp64_isinf(x0)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(x0)) return 0x7ff0000000000001LLU; // NaN
     x0 = calc_root(x0);
     cnt++;
   }
@@ -1287,6 +1300,8 @@ float64_t calc_ln(float64_t x) {
 }
 
 float64_t calc_sinA(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   float64_t n = fp64_sd(0.0);
   float64_t yn = fp64_sd(0.0);
   float64_t ynPrev = fp64_sd(0.0);
@@ -1297,7 +1312,13 @@ float64_t calc_sinA(float64_t x) {
     ynPrev = yn;
     numerator = fp64_mul(calc_powInte(fp64_sd(-1.0), n), calc_powInte(x, fp64_add(fp64_mul(fp64_sd(2.0), n), fp64_sd(1.0))));
     denominator = calc_facto(fp64_add(fp64_mul(fp64_sd(2.0), n), fp64_sd(1.0)));
+    if (fp64_isinf(numerator)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(numerator)) return 0x7ff0000000000001LLU; // NaN
+    if (fp64_isinf(denominator)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(denominator)) return 0x7ff0000000000001LLU; // NaN
     yn = fp64_add(yn, fp64_div(numerator, denominator));
+    if (fp64_isinf(yn)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(yn)) return 0x7ff0000000000001LLU; // NaN
     if (fp64_compare(calc_abs(fp64_sub(ynPrev, yn)), ACCURACY) == -1) break;
     n = fp64_add(n, fp64_sd(1.0));
   }
@@ -1307,6 +1328,8 @@ float64_t calc_sinA(float64_t x) {
 //sinx
 //-inf<x<+inf
 float64_t calc_sin(float64_t x) { //x를 sinA의 유효범위 안으로 변환, 입력, 출력
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
 	float64_t a = fp64_fmod(x, fp64_mul(fp64_sd(2.0), piNum));
 	float64_t index = fp64_sd(1.0);
 	if (fp64_compare(a, fp64_sd(0.0)) == -1) {
@@ -1332,6 +1355,8 @@ float64_t calc_sin(float64_t x) { //x를 sinA의 유효범위 안으로 변환, 
 }
 
 float64_t calc_root(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   return fp64_sqrt(x);
 }
 
@@ -1339,18 +1364,24 @@ float64_t calc_root(float64_t x) {
 //-inf<x<+inf
 //cos x에 의존
 float64_t calc_cos(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   return calc_sin(fp64_add(x, fp64_div(piNum, fp64_sd(2.0))));
 }
 
 //tanx를 출력하는 함수
 //x는 실수 범위
 float64_t calc_tan(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   return fp64_div(calc_sin(x), calc_cos(x));
 }
 
 //arcsinx
 // -1<x<1
 float64_t calc_arcsin(float64_t a) {
+  if (fp64_isinf(a)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(a)) return 0x7ff0000000000001LLU; // NaN
   float64_t xn = fp64_sd(0.0);
   long n = 0;
   float64_t xnPrev = xn;
@@ -1365,7 +1396,13 @@ float64_t calc_arcsin(float64_t a) {
     }
     numerator = fp64_sub(calc_sin(xnPrev), a);
     denominator = calc_cos(xnPrev);
+    if (fp64_isinf(numerator)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(numerator)) return 0x7ff0000000000001LLU; // NaN
+    if (fp64_isinf(denominator)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(denominator)) return 0x7ff0000000000001LLU; // NaN
     xn = fp64_sub(xnPrev, fp64_div(numerator, denominator));
+    if (fp64_isinf(xn)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(xn)) return 0x7ff0000000000001LLU; // NaN
     if (fp64_compare(calc_abs(fp64_sub(xnPrev, xn)), ACCURACY) == -1) break;
     n++;
   } 
@@ -1389,16 +1426,24 @@ float64_t calc_arctan(float64_t x) {
 //#pragma GCC pop_options
 
 float64_t calc_log(float64_t a) {
+  if (fp64_isinf(a)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(a)) return 0x7ff0000000000001LLU; // NaN
   //return calc_ln(a) / calc_ln(10);
   return fp64_div(calc_ln(a), calc_ln(fp64_sd(10.0)));
 }
 
 float64_t calc_sqrt(float64_t x) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
   //return calc_pow(x, 1.0 / 2);
   return calc_pow(x, fp64_div(fp64_sd(1.0), fp64_sd(2.0)));
 }
 
 float64_t calc_sqrtY(float64_t x, float64_t y) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
+  if (fp64_isinf(y)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(y)) return 0x7ff0000000000001LLU; // NaN
   //return calc_pow(x, 1.0 / y);
   return calc_pow(x, fp64_div(fp64_sd(1.0), y));
 }
@@ -1411,6 +1456,10 @@ float64_t calc_log2(float64_t x) {
 */
 
 float64_t calc_logXY(float64_t x, float64_t y) {
+  if (fp64_isinf(x)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(x)) return 0x7ff0000000000001LLU; // NaN
+  if (fp64_isinf(y)) return 0x7ff0000000000000LLU; // INF
+  if (fp64_isnan(y)) return 0x7ff0000000000001LLU; // NaN
   //return calc_ln(y) / calc_ln(x);
   return fp64_div(calc_ln(y), calc_ln(x));
 }
