@@ -86,6 +86,8 @@ Copyright 2022, Lee Geon-goo, Won Jong-wan.
 #define ERR_OOR 1 // OUT OF RANGE 오류
 #define ERR_DIVZERO 2 // 0으로 나누기 오류
 #define ERR_MATH 3 // 범위 초과를 제외한 수학적 오류
+#define ERR_INF 4 // 무한대 오류
+#define ERR_NAN 5 // NaN 오류
 // 다른 오류도 필요하면 정의할 것
 
 // 기타 정의
@@ -445,7 +447,7 @@ void loop() {
             }
             else {
               if (fp64_compare(regX, fp64_sd(0.0)) == 0) { // 0으로 나누기 검사
-                  errCode == ERR_DIVZERO;
+                  errCode = ERR_DIVZERO;
                   goto loop_err;
               }
               else regX = fp64_div(regY, regX);
@@ -528,12 +530,6 @@ void loop() {
             break;
 
             case BTN_SHIFT: //Shift: noShift
-            /*
-            if (numOperand && !isRes) {
-                rollUpReg(false);
-                numOperand = false;
-            }
-            */
             if (!isShift) {
               isShift = true;
               lcd.setCursor(6, 1);
@@ -674,6 +670,16 @@ void loop() {
 
             case BTN_ENTER: //Shift: sto
             if (buffer[0] != 0 && !isRes) bufferToRegX(true);
+            if (fp64_isinf(regX)) {
+              regX = fp64_sd(0.0);
+              printLCD(ERR_INF);
+              return;
+            }
+            if (fp64_isnan(regX)) {
+              regX = fp64_sd(0.0);
+              printLCD(ERR_NAN);
+              return;
+            }
             if (isShift) {
               stomem = regX;
               isShift = false;
@@ -769,6 +775,22 @@ void proc() { // 처리 함수
         }
         goto proc_err;
     }
+    if (fp64_isinf(regX) || fp64_isinf(regY) || fp64_isinf(regZ) || fp64_isinf(regT)) {
+      if (fp64_isinf(regX)) regX = fp64_sd(0.0);
+      if (fp64_isinf(regY)) regY = fp64_sd(0.0);
+      if (fp64_isinf(regZ)) regZ = fp64_sd(0.0);
+      if (fp64_isinf(regT)) regT = fp64_sd(0.0);
+      errCode = ERR_INF;
+      goto proc_err;
+    }
+    if (fp64_isnan(regX) || fp64_isnan(regY) || fp64_isnan(regZ) || fp64_isnan(regT)) {
+      if (fp64_isnan(regX)) regX = fp64_sd(0.0);
+      if (fp64_isnan(regY)) regY = fp64_sd(0.0);
+      if (fp64_isnan(regZ)) regZ = fp64_sd(0.0);
+      if (fp64_isnan(regT)) regT = fp64_sd(0.0);
+      errCode = ERR_NAN;
+      goto proc_err;
+    }
 
     return; // 문제가 없으면 아래 레이블로 내려가지 않게 함
 
@@ -815,6 +837,12 @@ void printLCD(byte mode) {
         }
         else if (errCode == ERR_MATH) {
             lcd.print("MATH ERROR");
+        }
+        else if (errCode == ERR_INF) {
+            lcd.print("INFITINY ERROR");
+        }
+        else if (errCode == ERR_NAN) {
+            lcd.print("NaN ERROR");
         }
         // 다른 오류 코드 표시 부분 필요하면 여기에 덧댐
 
@@ -1155,7 +1183,6 @@ float64_t calc_mod(float64_t x, float64_t y) {
 	return fp64_mul(x1, y);
 }
 
-
 float64_t calc_exp(float64_t x) {
   long n = 0;
   float64_t sum = fp64_sd(0.0);
@@ -1164,8 +1191,10 @@ float64_t calc_exp(float64_t x) {
   float64_t sumPrev = fp64_sd(0.0);
   float64_t frac = fp64_sd(0.0);
   float64_t powd = fp64_sd(0.0);
-  if (fp64_isinf(ex0) == 1) return ex0;
+  if (fp64_isinf(ex0)) return 0x7ff0000000000000LLU; // INF
   while (1) {
+    if (fp64_isinf(sum)) return 0x7ff0000000000000LLU; // INF
+    if (fp64_isnan(sum)) return 0x7ff0000000000001LLU; // NaN
     sumPrev = sum;
     frac = fp64_div(ex0, calc_facto(fp64_int32_to_float64(n)));
     powd = calc_powInte(xDiff, fp64_int32_to_float64(n));
