@@ -1012,6 +1012,7 @@ void clearX() { //regX와 입력 버퍼, 마커를 초기화하는 함수
     isEEX = false;
     isNegExp = false;
     isDecimal = false;
+    numOperand = false;
 }
 void regToStr() { // regX에 새 값이 들어왔을 때, 그 값을 버퍼에 넣어줌
   if (fp64_compare(regX, fp64_sd(0.0)) == 0) { // regX에 들어온 값이 0일 때 처리
