@@ -97,7 +97,6 @@ Copyright 2022, Lee Geon-goo, Won Jong-wan.
 
 // 상수 정의
 const float64_t ACCURACY = (float64_t)0x3d719799812dea11LLU; //정확도 12자리
-//const float64_t ACCURACY_LN = (float64_t)0x3c670ef54646d400LLU;
 // 소수점 자리가 긴 상수값들은 라이브러리의 한계로 아래와 같이 16진수값 LLU로 직접 비트를 조작해야함..
 const float64_t piNum = (float64_t)0x400921fb54442d18LLU; // 원주율 3.1415926535897932
 const float64_t piIn = (float64_t)0x400921fb54411744LLU; // 입력으로 들어가는 양수의 원주율
@@ -160,7 +159,7 @@ void setup() {
     regT = fp64_sd(0.0);
     stomem = fp64_sd(0.0); // 독립 메모리 초기화
     lcd.setCursor(0, 0); // lcd에서 시작 메시지 출력
-    lcd.print("AR-32");
+    lcd.print("AR-32     v1.0.0");
     lcd.setCursor(2, 1);
     lcd.print("RPN SCIENTIFIC");
     delay(2000); // 2초 동안 보여줌
@@ -684,12 +683,11 @@ void loop() {
               stomem = regX;
               isShift = false;
               printLCD(MODE_STATONLY);
-              return;
             }
             else {
               rollUpReg(true);
-              return;
             }
+            return;
             break;
 
             case BTN_CHS: //Shift: rcl
@@ -999,6 +997,8 @@ void clearMem(bool reset) { // 메모리 비우는(초기화) 함수
     isDecimal = false;
     isOp = false;
     isShift = false;
+    numOperand = false;
+    isRes = false;
     if (reset) {
       isBkLight = true;
       stomem = fp64_sd(0.0);
