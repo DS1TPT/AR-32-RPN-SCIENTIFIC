@@ -176,12 +176,12 @@ void loop() {
               printLCD(MODE_BUSY); // 연산을 할 때는 화면에 BUSY를 띄움
               if (buffer[0] != 0 && !isRes) bufferToRegX(true); // 버퍼값이 0이 아니면 버퍼 문자열을 레지스터에 fp64로 복사
               if (fp64_compare(regX, fp64_sd(-459.67)) == 1) { //절대영도 보다 큰지 검사
-							  regX = calc_cToF(regX); // 연산 수행
-							}
+                regX = calc_cToF(regX); // 연산 수행
+              }
               else { // 절대영도보다 작음
-							  errCode = ERR_MATH; // 수학오류로 오류코드 설정
+                errCode = ERR_MATH; // 수학오류로 오류코드 설정
                 goto loop_err; // 오류 처리 부분으로 점프
-							}
+              }
               isOp = true; // 연산자가 있음을 마크
               numOperand = 1; // 피연사자가 하나임을 마크
             }
@@ -200,12 +200,12 @@ void loop() {
               printLCD(MODE_BUSY);
               if (buffer[0] != 0 && !isRes) bufferToRegX(true);
               if (fp64_compare(regX, fp64_sd(-273.15)) == 1) { //절대영도 보다 높은지 검사
-								regX = calc_cToF(regX);
-							}
-							else {
-								errCode = ERR_MATH;
+                regX = calc_cToF(regX);
+              }
+              else {
+                errCode = ERR_MATH;
                 goto loop_err;
-							}
+              }
               isOp = true;
               numOperand = 1;
             }
@@ -394,6 +394,7 @@ void loop() {
             }
             regToStr(); // 입력 버퍼에 regX 값을 복사함
             isShift = false;
+            numOperand = 0;
             break;
 
             case '-': //Shift: mm -> in
@@ -1187,14 +1188,14 @@ float64_t calc_powInte(float64_t x, float64_t y) { //pow를 만들기 위해 필
 float64_t calc_inteCut(float64_t x) {
   if (fp64_isinf(x)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(x)) return 0x7ff0000000000001LLU;
-	float64_t x1 = fp64_round(x);
-	float64_t result = fp64_sub(x, x1);
-	if (fp64_compare(x1, x) <= 0) {
-		return result;
-	}
-	else {
-		return fp64_add(result, fp64_sd(1.0));
-	}
+  float64_t x1 = fp64_round(x);
+  float64_t result = fp64_sub(x, x1);
+  if (fp64_compare(x1, x) <= 0) {
+    return result;
+  }
+  else {
+    return fp64_add(result, fp64_sd(1.0));
+  }
 }
 
 //실수 범위 모듈러 연산
@@ -1204,13 +1205,13 @@ float64_t calc_mod(float64_t x, float64_t y) {
   if (fp64_isnan(x)) return 0x7ff0000000000001LLU;
   if (fp64_isinf(y)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(y)) return 0x7ff0000000000001LLU;
-	float64_t x0 = fp64_div(x, y);
+  float64_t x0 = fp64_div(x, y);
   if (fp64_isinf(x0)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(x0)) return 0x7ff0000000000001LLU;
-	float64_t x1 = calc_inteCut(x0);
+  float64_t x1 = calc_inteCut(x0);
   if (fp64_isinf(x1)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(x1)) return 0x7ff0000000000001LLU;
-	return fp64_mul(x1, y);
+  return fp64_mul(x1, y);
 }
 
 float64_t calc_exp(float64_t x) {
@@ -1339,28 +1340,28 @@ float64_t calc_sinA(float64_t x) {
 float64_t calc_sin(float64_t x) { //x를 sinA의 유효범위 안으로 변환, 입력, 출력
   if (fp64_isinf(x)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(x)) return 0x7ff0000000000001LLU;
-	float64_t a = fp64_fmod(x, fp64_mul(fp64_sd(2.0), piNum));
-	float64_t index = fp64_sd(1.0);
-	if (fp64_compare(a, fp64_sd(0.0)) == -1) {
-		index = fp64_sd(-1.0);
-		a = fp64_neg(a);
-	}
-	if (fp64_compare(a, fp64_sd(0.0)) >= 0 && fp64_compare(a, piIn) <= 0) {
-		//return index * calc_sinA(a);
+  float64_t a = fp64_fmod(x, fp64_mul(fp64_sd(2.0), piNum));
+  float64_t index = fp64_sd(1.0);
+  if (fp64_compare(a, fp64_sd(0.0)) == -1) {
+    index = fp64_sd(-1.0);
+    a = fp64_neg(a);
+  }
+  if (fp64_compare(a, fp64_sd(0.0)) >= 0 && fp64_compare(a, piIn) <= 0) {
+    //return index * calc_sinA(a);
     return fp64_mul(index, calc_sinA(a));
-	}
-	else if (fp64_compare(a, fp64_div(piIn, fp64_sd(2.0))) == 1 && fp64_compare(a, piIn) <= 0) {
-		//return index * calc_sinA(pi - a);
+  }
+  else if (fp64_compare(a, fp64_div(piIn, fp64_sd(2.0))) == 1 && fp64_compare(a, piIn) <= 0) {
+    //return index * calc_sinA(pi - a);
     return fp64_mul(index, calc_sinA(fp64_sub(piNum, a)));
-	}
-	else if (fp64_compare(a, piIn) == 1 && fp64_compare(a, fp64_div(fp64_mul(piIn, fp64_sd(3.0)), fp64_sd(2.0))) <= 0) {
-		//return (-1) * index * calc_sinA(a - pi);
+  }
+  else if (fp64_compare(a, piIn) == 1 && fp64_compare(a, fp64_div(fp64_mul(piIn, fp64_sd(3.0)), fp64_sd(2.0))) <= 0) {
+    //return (-1) * index * calc_sinA(a - pi);
     return fp64_mul(fp64_sd(-1.0), fp64_mul(index, calc_sinA(fp64_sub(a, piNum))));
-	}
-	else { // a > pi*3/2 && s<= 2*pi
-		//return (-1) * index * calc_sinA(2 * pi - a);
+  }
+  else { // a > pi*3/2 && s<= 2*pi
+    //return (-1) * index * calc_sinA(2 * pi - a);
     return fp64_mul(fp64_sd(-1.0), fp64_mul(index, calc_sinA(fp64_sub(fp64_mul(fp64_sd(2.0), piNum), a))));
-	}
+  }
 }
 
 float64_t calc_root(float64_t x) {
@@ -1428,13 +1429,13 @@ float64_t calc_arccos(float64_t x) {
 float64_t calc_arctan(float64_t x) {
   if (fp64_isinf(x)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(x)) return 0x7ff0000000000001LLU;
-	float64_t index = fp64_sd(1.0);
+  float64_t index = fp64_sd(1.0);
   if (fp64_compare(x, fp64_sd(0.0)) == -1) index = fp64_sd(-1.0);
-	//double t = (1 + (1 / calc_powInte(x, 2)));
+  //double t = (1 + (1 / calc_powInte(x, 2)));
   float64_t t = fp64_add(fp64_sd(1.0), fp64_div(fp64_sd(1.0), calc_powInte(x, fp64_sd(2.0))));
   if (fp64_isinf(t)) return 0x7ff0000000000000LLU;
   if (fp64_isnan(t)) return 0x7ff0000000000001LLU;
-	//return index*calc_arcsin(calc_root(1 / t));
+  //return index*calc_arcsin(calc_root(1 / t));
   return fp64_mul(index, calc_arcsin(calc_root(fp64_div(fp64_sd(1.0), t))));
 }
 
@@ -1490,52 +1491,52 @@ float64_t calc_degreeToRad(float64_t a){
 }
 
 float64_t calc_fToC(float64_t f) {
-	//return (f - 32) / 1.8;
+  //return (f - 32) / 1.8;
    return fp64_div(fp64_sub(f, fp64_sd(32.0)), fp64_sd(1.8));
 }
 
 float64_t calc_cToF(float64_t c) {
-	//return (c * 1.8) + 32;
+  //return (c * 1.8) + 32;
    return fp64_add(fp64_mul(c, fp64_sd(1.8)), fp64_sd(32.0));
 }
 
 float64_t calc_kgToIb(float64_t kg) {
-	//return kg / 0.453592;
+  //return kg / 0.453592;
    return fp64_div(kg, fp64_sd(0.453592));
 }
 
 float64_t calc_ibToKg(float64_t ib) {
-	//return ib * 0.453592;
+  //return ib * 0.453592;
    return fp64_mul(ib, fp64_sd(0.453592));
 }
 
 float64_t calc_galToL(float64_t gal) {
-	//return gal * 3.785411784;
+  //return gal * 3.785411784;
    return fp64_mul(gal, fp64_sd(3.785411784));
 }
 
 float64_t calc_LToGal(float64_t L) {
-	//return L / 3.785411784;
+  //return L / 3.785411784;
    return fp64_div(L, fp64_sd(3.785411784));
 }
 
 float64_t calc_mileToKm(float64_t mile) {
-	//return mile * 1.60934;
+  //return mile * 1.60934;
    return fp64_mul(mile, fp64_sd(1.60934));
 }
 
 float64_t calc_kmToMile(float64_t km) {
-	//return km / 1.60934;
+  //return km / 1.60934;
    return fp64_div(km, fp64_sd(1.60934));
 }
 
 float64_t calc_inToMm(float64_t in) {
-	//return in * 25.4;
+  //return in * 25.4;
    return fp64_mul(in, fp64_sd(25.4));
 }
 
 float64_t calc_mmToIn(float64_t mm) {
-	//return mm / 25.4;
+  //return mm / 25.4;
    return fp64_div(mm, fp64_sd(25.4));
 }
 
@@ -1587,26 +1588,26 @@ float64_t calc_approx(float64_t s) {
 //x>=0
 //바빌로니아법을 활용한 root 
 float64_t calc_root(float64_t x) {
-	float64_t n = calc_approx(x);
-	float64_t m0;
-	int cnt = 0;
-	float64_t outMemory = fp64_sd(0.0);
+  float64_t n = calc_approx(x);
+  float64_t m0;
+  int cnt = 0;
+  float64_t outMemory = fp64_sd(0.0);
   float64_t memory = n;
-	while (1) {
-		memory = n;
-		if (cnt % 2 == 1) {
-			if (fp64_compare(outMemory, n) == 0) break;
-			outMemory = n;
-		}
-		m0 = calc_powInte(n, fp64_sd(2.0));
-		if (fp64_compare(m0, x) == 0) break;
-		else {
-			//n = (m0 + x) / (2 * n);
+  while (1) {
+    memory = n;
+    if (cnt % 2 == 1) {
+      if (fp64_compare(outMemory, n) == 0) break;
+      outMemory = n;
+    }
+    m0 = calc_powInte(n, fp64_sd(2.0));
+    if (fp64_compare(m0, x) == 0) break;
+    else {
+      //n = (m0 + x) / (2 * n);
       n = fp64_div(fp64_add(m0, x), fp64_mul(n, fp64_sd(2.0)));
-			if (fp64_compare(calc_abs(fp64_sub(memory, n)), ACCURACY) == -1) break;
-			cnt++;
-		}
-	}
-	return n;
+      if (fp64_compare(calc_abs(fp64_sub(memory, n)), ACCURACY) == -1) break;
+      cnt++;
+    }
+  }
+  return n;
 }
 */
