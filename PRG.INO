@@ -159,7 +159,7 @@ void setup() {
     regT = fp64_sd(0.0);
     stomem = fp64_sd(0.0); // 독립 메모리 초기화
     lcd.setCursor(0, 0); // lcd에서 시작 메시지 출력
-    lcd.print("AR-32     v1.0.0");
+    lcd.print("AR-32     v1.0.2");
     lcd.setCursor(2, 1);
     lcd.print("RPN SCIENTIFIC");
     delay(2000); // 2초 동안 보여줌
@@ -463,15 +463,19 @@ void loop() {
             case BTN_LOG: //Shift: log_x(y)
             printLCD(MODE_BUSY);
             if (buffer[0] != 0 && !isRes) bufferToRegX(true);
-            if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
+            if (isShift) {
+            if (fp64_compare(regX, fp64_sd(0.0)) <= 0 || fp64_compare(regX, fp64_sd(1.0)) == 0) { // 정의역
                 errCode = ERR_MATH;
                 goto loop_err;
             }
-            if (isShift) {
               regX = calc_logXY(regX, regY);
               numOperand = 2;
             }
             else {
+               if (fp64_compare(regX, fp64_sd(0.0)) == -1) { // 정의역
+                  errCode = ERR_MATH;
+                  goto loop_err;
+               }
               regX = calc_log(regX);
               numOperand = 1;
             }
@@ -481,14 +485,18 @@ void loop() {
             case BTN_LN: //Shift: log2
             printLCD(MODE_BUSY);
             if (buffer[0] != 0 && !isRes) bufferToRegX(true);
-            if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
-                errCode = ERR_MATH;
-                goto loop_err;
-            }
             if (isShift) {
+               if (fp64_compare(regX, fp64_sd(0.0)) <= 0 || fp64_compare(regX, fp64_sd(1.0)) == 0) { // 정의역
+                  errCode = ERR_MATH;
+                  goto loop_err;
+               }
               regX = calc_logXY(fp64_sd(2.0), regX);
             }
             else {
+               if (fp64_compare(regX, fp64_sd(0.0)) == -1) { // 정의역 
+                  errCode = ERR_MATH;
+                  goto loop_err;
+               }
               regX = calc_ln(regX);
             }
             isOp = true;
@@ -519,6 +527,7 @@ void loop() {
             break;
 
             case BTN_ROLLDOWN: //Shift: roll up reg
+            if (buffer[0] != 0 && !isRes) bufferToRegX(true);
             if (isShift) {
               rollUpReg(false);
             }
@@ -594,14 +603,14 @@ void loop() {
             printLCD(MODE_BUSY);
             if (buffer[0] != 0 && !isRes) bufferToRegX(true);
             if (isShift) {
-              if (fp64_compare(regX, fp64_sd(0.0)) == -1) { // 음수 x 입력을 막음(복소수 나올 수 있음)
-                errCode = ERR_MATH;
-                goto loop_err;
-              }
-              else regX = calc_powInte(regX, fp64_sd(2.0));
+              regX = calc_powInte(regX, fp64_sd(2.0));
               numOperand = 1;
             }
             else {
+              if (fp64_compare(regX, fp64_sd(0.0)) == 0 && fp64_compare(regY, fp64_sd(0.0)) == 0) { // 0^0은 정의되지 않음
+                errCode = ERR_MATH;
+                goto loop_err;
+              }
               regX = calc_pow(regY, regX);
               numOperand = 2;
             }
@@ -612,18 +621,17 @@ void loop() {
             printLCD(MODE_BUSY);
             if (buffer[0] != 0 && !isRes) bufferToRegX(true);
             if (isShift) {
-              if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
-                errCode = ERR_MATH;
+              if (fp64_compare(regY, fp64_sd(0.0)) == -1 || fp64_compare(regX, fp64_sd(0.0)) == 0) { 
+                // 음수 y 입력과 x==0 입력을 NaN 처리함
+                errCode = ERR_NAN;
                 goto loop_err;
               }
-              else {
-                regX = calc_pow(regY, fp64_div(fp64_sd(1.0), regX));
-                numOperand = 2;
-              }
+              regX = calc_pow(regY, fp64_div(fp64_sd(1.0), regX));
+              numOperand = 2;
             }
             else {
               if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
-                errCode = ERR_MATH;
+                errCode = ERR_NAN;
                 goto loop_err;
               }
               else {
@@ -649,8 +657,8 @@ void loop() {
             break;
 
             case BTN_EXCHANGEXY: //Shift: x!
+            if (buffer[0] != 0 && !isRes) bufferToRegX(true);
             if (isShift) {
-              if (buffer[0] != 0 && !isRes) bufferToRegX(true);
               if (fp64_compare(regX, fp64_sd(0.0)) == -1) {
                 errCode = ERR_MATH;
                 goto loop_err;
@@ -665,6 +673,7 @@ void loop() {
               float64_t tmpexchange = regX;
               regX = regY;
               regY = tmpexchange;
+              regToStr();
             }
             break;
 
