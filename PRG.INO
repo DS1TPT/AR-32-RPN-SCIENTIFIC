@@ -159,7 +159,7 @@ void setup() {
     regT = fp64_sd(0.0);
     stomem = fp64_sd(0.0); // 독립 메모리 초기화
     lcd.setCursor(0, 0); // lcd에서 시작 메시지 출력
-    lcd.print("AR-32     v1.0.2");
+    lcd.print("AR-32     v1.0.3");
     lcd.setCursor(2, 1);
     lcd.print("RPN SCIENTIFIC");
     delay(2000); // 2초 동안 보여줌
@@ -541,13 +541,15 @@ void loop() {
             case BTN_SHIFT: //Shift: noShift
             if (!isShift) {
               isShift = true;
+              lcd.setCursor(5, 1);
+              lcd.print('S');
               lcd.setCursor(6, 1);
               lcd.write(BTN_SHIFT);
             }
             else {
               isShift = false;
-              lcd.setCursor(6, 1);
-              lcd.write(' ');
+              lcd.setCursor(5, 1);
+              lcd.write("  ");
             }
             return;
             break;
@@ -650,6 +652,10 @@ void loop() {
               numOperand = 1;
             }
             else {
+              if (fp64_compare(regX, fp64_sd(0.0)) == 0) { // 0으로 나누기 처리
+                 errCode = ERR_DIVZERO;
+                 goto loop_err;
+              }
               regX = fp64_div(fp64_sd(1.0), regX);
               numOperand = 1;
             }
@@ -917,6 +923,8 @@ void printLCD(byte mode) {
     }
     lcd.setCursor(0, 1); // 아랫줄 처음으로 커서 설정
     if (isShift && mode != MODE_RES) { // Shift 눌렀으면 표시
+        lcd.setCursor(5, 1);
+        lcd.print('S');
         lcd.setCursor(6, 1);
         lcd.write(BTN_SHIFT);
     }
