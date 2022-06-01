@@ -1,7 +1,5 @@
 # AR-32 RPN SCIENTIFIC PROJECT
 
-개발중: 파일 이름이 won 으로 시작하면 원종완이 쓴 코드임
-
 
 
 
